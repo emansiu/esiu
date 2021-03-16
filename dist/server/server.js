@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = __importDefault(require("http"));
 const path_1 = __importDefault(require("path"));
 const express_1 = __importDefault(require("express"));
-const port = 3000;
+const port = process.env.PORT || 3000;
 class App {
     constructor(port) {
         this.port = port;
