@@ -1,0 +1,22 @@
+{
+  "name": "three_example.01",
+  "version": "1.0.0",
+  "description": "tut",
+  "scripts": {
+    "dev": "concurrently -k \"tsc -p ./src/server -w\" \"tsc -p ./src/client -w\" \"nodemon ./dist/server/server.js\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "E",
+  "license": "MIT",
+  "dependencies": {
+    "@types/dat.gui": "^0.7.6",
+    "@types/express": "^4.17.11",
+    "@types/node": "^14.14.33",
+    "@types/three": "^0.126.0",
+    "express": "^4.17.1",
+    "three": "^0.126.1"
+  },
+  "devDependencies": {
+    "concurrently": "^6.0.0"
+  }
+}
