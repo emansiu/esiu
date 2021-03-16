@@ -2,7 +2,7 @@ import http from "http"
 import path from "path"
 import express from "express"
 
-const port: number = 3000
+const port: any = process.env.PORT || 3000
 
 class App {
     private server: http.Server
