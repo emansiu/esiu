@@ -31,7 +31,7 @@ const controls = new OrbitControls(camera, renderer.domElement)
 
 // ADD sphere
 const sphereGeo: THREE.SphereGeometry = new THREE.SphereGeometry(3,10,10)
-const material: THREE.MeshPhysicalMaterial  = new THREE.MeshPhysicalMaterial ({ color: 0x999999 })
+const material: THREE.MeshPhysicalMaterial  = new THREE.MeshPhysicalMaterial ({ color: 0x999999, reflectivity:1, roughness:0 })
 const sphere: THREE.Mesh = new THREE.Mesh(sphereGeo, material)
 sphere.position.set(10,0,0)
 scene.add(sphere)
@@ -64,6 +64,12 @@ scene.add(ambientLightFill);
 // LIGHT --- HELPER
 var helper = new THREE.SpotLightHelper(mainSpotLight);
 scene.add(helper);
+
+// ENVIRONMENT HDR
+const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"])
+envTexture.mapping = THREE.CubeReflectionMapping
+//envTexture.mapping = THREE.CubeRefractionMapping
+material.envMap = envTexture
 
 const loader = new GLTFLoader()
 loader.load(
