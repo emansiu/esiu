@@ -2,12 +2,8 @@ import * as THREE from '/build/three.module.js';
 import { OrbitControls } from '/jsm/controls/OrbitControls';
 import Stats from '/jsm/libs/stats.module';
 import { GUI } from '/jsm/libs/dat.gui.module';
-import { GLTFLoader } from '/jsm/loaders/GLTFLoader';
 const scene = new THREE.Scene();
 const sceneMeshes = new Array();
-// HELPERS
-var axesHelper = new THREE.AxesHelper(5);
-scene.add(axesHelper);
 // SET UP CAMERA
 const height = window.innerHeight;
 const width = window.innerWidth;
@@ -21,12 +17,38 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 //controls.addEventListener('change', render) 
-// ADD sphere
-const sphereGeo = new THREE.SphereGeometry(3, 10, 10);
-const material = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 });
-const sphere = new THREE.Mesh(sphereGeo, material);
-sphere.position.set(10, 0, 0);
-scene.add(sphere);
+// ADD ICOSAHEDRON
+const icoGeo = new THREE.IcosahedronGeometry(4, 2);
+// const material: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 })
+const vshader = `
+uniform float u_time;
+uniform float u_radius;
+
+void main() {
+  vec3 pos = position;
+
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
+}
+`;
+const fshader = `
+void main()
+{
+  vec3 color = vec3(0.5,0.4,1.0);
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+const material = new THREE.ShaderMaterial({
+    uniforms: {
+        u_time: { value: 1.0 },
+        u_radius: { value: 1.0 },
+        resolution: { value: new THREE.Vector2() }
+    },
+    vertexShader: vshader,
+    fragmentShader: fshader
+});
+const icoSphere = new THREE.Mesh(icoGeo, material);
+icoSphere.position.set(0, 0, 0);
+scene.add(icoSphere);
 // ADD INVISIBLE PLANE
 const invisiblePlaneGeo = new THREE.PlaneBufferGeometry(50, 50, 1, 1);
 const invisibleMat = new THREE.MeshBasicMaterial({});
@@ -54,23 +76,6 @@ const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLiv
 envTexture.mapping = THREE.CubeReflectionMapping;
 // envTexture.mapping = THREE.CubeRefractionMapping
 material.envMap = envTexture;
-const loader = new GLTFLoader();
-loader.load('./models/icoSphere.glb', function (gltf) {
-    gltf.scene.traverse(function (child) {
-        if (child.isMesh) {
-            let m = child;
-            m.scale.set(3, 3, 3);
-            m.receiveShadow = true;
-            m.castShadow = true;
-            sceneMeshes.push(m);
-        }
-    });
-    scene.add(gltf.scene);
-}, (xhr) => {
-    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-}, (error) => {
-    console.log(error);
-});
 // RAYCASTER 
 renderer.domElement.addEventListener('mousemove', onMouseMove, false);
 const raycaster = new THREE.Raycaster();
@@ -110,11 +115,6 @@ function onWindowResize() {
 const stats = Stats();
 document.body.appendChild(stats.dom);
 const gui = new GUI();
-const cubeFolder = gui.addFolder("sphere");
-// cubeFolder.add(sphere.rotation, "x", 0, Math.PI * 2, 0.01)
-// cubeFolder.add(sphere.rotation, "y", 0, Math.PI * 2, 0.01)
-// cubeFolder.add(sphere.rotation, "z", 0, Math.PI * 2, 0.01)
-cubeFolder.open();
 const cameraFolder = gui.addFolder("Camera");
 cameraFolder.add(camera.position, "z", 0, 10, 0.01);
 cameraFolder.open();
@@ -124,7 +124,6 @@ var animate = function () {
     requestAnimationFrame(animate);
     helper.update();
     render();
-    sceneMeshes[1].rotation.x += .01; //<---- have to wait until page is loaded otherwise you get errors until it is
     stats.update();
 };
 function render() {
