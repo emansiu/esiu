@@ -9,8 +9,8 @@ const scene: THREE.Scene = new THREE.Scene()
 const sceneMeshes = new Array()
 
 // HELPERS
-var axesHelper = new THREE.AxesHelper( 5 );
-scene.add( axesHelper );
+var axesHelper = new THREE.AxesHelper(5);
+scene.add(axesHelper);
 
 // SET UP CAMERA
 const height: number = window.innerHeight
@@ -30,15 +30,15 @@ const controls = new OrbitControls(camera, renderer.domElement)
 //controls.addEventListener('change', render) 
 
 // ADD sphere
-const sphereGeo: THREE.SphereGeometry = new THREE.SphereGeometry(3,10,10)
-const material: THREE.MeshPhysicalMaterial  = new THREE.MeshPhysicalMaterial ({ color: 0x999999, reflectivity:1, roughness:0 })
+const sphereGeo: THREE.SphereGeometry = new THREE.SphereGeometry(3, 10, 10)
+const material: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 })
 const sphere: THREE.Mesh = new THREE.Mesh(sphereGeo, material)
-sphere.position.set(10,0,0)
+sphere.position.set(10, 0, 0)
 scene.add(sphere)
 
 // ADD INVISIBLE PLANE
-const invisiblePlaneGeo: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(50,50,1,1)
-const invisibleMat: THREE.MeshBasicMaterial  = new THREE.MeshBasicMaterial({});
+const invisiblePlaneGeo: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(50, 50, 1, 1)
+const invisibleMat: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({});
 const invisiblePlane: THREE.Mesh = new THREE.Mesh(invisiblePlaneGeo, invisibleMat)
 invisiblePlane.visible = false
 scene.add(invisiblePlane)
@@ -48,7 +48,7 @@ sceneMeshes.push(invisiblePlane) //<--- push all geo we will interact with
 
 // LIGHTS
 
-const mainSpotLight = new THREE.SpotLight(0xffffff, 5,15,0.4,0.5);
+const mainSpotLight = new THREE.SpotLight(0xffffff, 25, 20, 0.4, 0.5);
 mainSpotLight.position.set(0, 1, 10);
 mainSpotLight.castShadow = true
 //mainSpotLight.shadow.bias = -.003
@@ -58,7 +58,7 @@ scene.add(mainSpotLight);
 scene.add(mainSpotLight.target);
 
 
-var ambientLightFill = new THREE.AmbientLight( '',0.2);
+var ambientLightFill = new THREE.AmbientLight( '',0.1);
 scene.add(ambientLightFill);
 
 // LIGHT --- HELPER
@@ -68,7 +68,7 @@ scene.add(helper);
 // ENVIRONMENT HDR
 const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"])
 envTexture.mapping = THREE.CubeReflectionMapping
-//envTexture.mapping = THREE.CubeRefractionMapping
+// envTexture.mapping = THREE.CubeRefractionMapping
 material.envMap = envTexture
 
 const loader = new GLTFLoader()
@@ -78,9 +78,10 @@ loader.load(
         gltf.scene.traverse(function (child) {
             if ((<THREE.Mesh>child).isMesh) {
                 let m = <THREE.Mesh>child
-                m.scale.set(3,3,3)
+                m.scale.set(3, 3, 3)
                 m.receiveShadow = true
                 m.castShadow = true
+                sceneMeshes.push(m)
             }
         })
         scene.add(gltf.scene);
@@ -105,14 +106,14 @@ function onMouseMove(event: MouseEvent) {
         x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
         y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
     }
-    
+
 
     raycaster.setFromCamera(mouse, camera);
 
     const intersects = raycaster.intersectObjects(sceneMeshes, false);
 
     if (intersects.length > 0) {
-        const {x,y,z} = intersects[0].point
+        const { x, y, z } = intersects[0].point
         // invisiblePlane.position.set(x,y,z)
         //console.log(sceneMeshes.length + " " + intersects.length)
         //console.log(intersects[0])
@@ -122,7 +123,7 @@ function onMouseMove(event: MouseEvent) {
         // line.lookAt(intersects[0].face.normal);
         // line.position.copy(intersects[0].point);
 
-        mainSpotLight.target.position.set(x,y,z)
+        mainSpotLight.target.position.set(x, y, z)
 
         // let n = new THREE.Vector3();
         // n.copy(intersects[0].face.normal);
@@ -154,13 +155,14 @@ const cameraFolder = gui.addFolder("Camera")
 cameraFolder.add(camera.position, "z", 0, 10, 0.01)
 cameraFolder.open()
 
-
+// console.log(sceneMeshes[0].length)
+// console.log(sceneMeshes[1].name)
 
 var animate = function () {
     requestAnimationFrame(animate)
     helper.update()
     render()
-
+    sceneMeshes[1].rotation.x += .01 //<---- have to wait until page is loaded otherwise you get errors until it is
     stats.update()
 };
 

@@ -23,7 +23,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 //controls.addEventListener('change', render) 
 // ADD sphere
 const sphereGeo = new THREE.SphereGeometry(3, 10, 10);
-const material = new THREE.MeshPhysicalMaterial({ color: 0x999999, reflectivity: 1, roughness: 0 });
+const material = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 });
 const sphere = new THREE.Mesh(sphereGeo, material);
 sphere.position.set(10, 0, 0);
 scene.add(sphere);
@@ -36,7 +36,7 @@ scene.add(invisiblePlane);
 // sceneMeshes.push(sphere,invisiblePlane) //<--- push all geo we will interact with
 sceneMeshes.push(invisiblePlane); //<--- push all geo we will interact with
 // LIGHTS
-const mainSpotLight = new THREE.SpotLight(0xffffff, 5, 15, 0.4, 0.5);
+const mainSpotLight = new THREE.SpotLight(0xffffff, 25, 20, 0.4, 0.5);
 mainSpotLight.position.set(0, 1, 10);
 mainSpotLight.castShadow = true;
 //mainSpotLight.shadow.bias = -.003
@@ -44,7 +44,7 @@ mainSpotLight.shadow.mapSize.width = 2048;
 mainSpotLight.shadow.mapSize.height = 2048;
 scene.add(mainSpotLight);
 scene.add(mainSpotLight.target);
-var ambientLightFill = new THREE.AmbientLight('', 0.2);
+var ambientLightFill = new THREE.AmbientLight('', 0.1);
 scene.add(ambientLightFill);
 // LIGHT --- HELPER
 var helper = new THREE.SpotLightHelper(mainSpotLight);
@@ -52,7 +52,7 @@ scene.add(helper);
 // ENVIRONMENT HDR
 const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"]);
 envTexture.mapping = THREE.CubeReflectionMapping;
-//envTexture.mapping = THREE.CubeRefractionMapping
+// envTexture.mapping = THREE.CubeRefractionMapping
 material.envMap = envTexture;
 const loader = new GLTFLoader();
 loader.load('./models/icoSphere.glb', function (gltf) {
@@ -62,6 +62,7 @@ loader.load('./models/icoSphere.glb', function (gltf) {
             m.scale.set(3, 3, 3);
             m.receiveShadow = true;
             m.castShadow = true;
+            sceneMeshes.push(m);
         }
     });
     scene.add(gltf.scene);
@@ -117,10 +118,13 @@ cubeFolder.open();
 const cameraFolder = gui.addFolder("Camera");
 cameraFolder.add(camera.position, "z", 0, 10, 0.01);
 cameraFolder.open();
+// console.log(sceneMeshes[0].length)
+// console.log(sceneMeshes[1].name)
 var animate = function () {
     requestAnimationFrame(animate);
     helper.update();
     render();
+    sceneMeshes[1].rotation.x += .01; //<---- have to wait until page is loaded otherwise you get errors until it is
     stats.update();
 };
 function render() {
