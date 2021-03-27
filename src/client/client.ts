@@ -25,13 +25,15 @@ renderer.shadowMap.enabled = true
 renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
+// renderer.context.getExtension('OES_standard_derivatives');
+
 
 const controls = new OrbitControls(camera, renderer.domElement)
 //controls.addEventListener('change', render) 
 
 // ADD ICOSAHEDRON
 const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(4, 1)
-// const material: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 })
+const materialPhysical: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 })
 
 const vshader = `
     uniform float u_time;
@@ -49,6 +51,8 @@ const vshader = `
     }
 `
 const fshader = `
+    // #extension GL_OES_standard_derivatives : enable
+
     uniform sampler2D u_beachImage;
 
     varying vec2 v_uv;
@@ -60,11 +64,11 @@ const fshader = `
         vec3 Y = dFdy(vNormal);
         vec3 normal = normalize(cross(X,Y));
 
-        float diffuse = dot(normal, vec3(1.0));
+        float diffuse = dot(normal, vec3(0.5));
 
         vec4 beachImage = texture2D(u_beachImage, v_uv * diffuse );
-
-        gl_FragColor = vec4(beachImage.rgb,1.0);
+        
+        gl_FragColor = vec4(beachImage.rgb,0.9);
         // gl_FragColor = vec4(diffuse);
     }
 `
@@ -84,8 +88,10 @@ const material = new THREE.ShaderMaterial( {
 
 	fragmentShader: fshader,
     // wireframe:true
+    transparent:true
 
 } );
+material.extensions.derivatives = true;
 const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, material)
 icoSphere.position.set(0, 0, 0)
 scene.add(icoSphere)
