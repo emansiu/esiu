@@ -1,11 +1,14 @@
 import * as THREE from '/build/three.module.js'
 import { OrbitControls } from '/jsm/controls/OrbitControls'
 import Stats from '/jsm/libs/stats.module'
-import { GUI } from '/jsm/libs/dat.gui.module'
-import { GLTFLoader } from '/jsm/loaders/GLTFLoader'
-import { DragControls } from '/jsm/controls/DragControls'
+// import { GUI } from '/jsm/libs/dat.gui.module'
+// import { GLTFLoader } from '/jsm/loaders/GLTFLoader'
+// import { DragControls } from '/jsm/controls/DragControls'
+
+
 
 const scene: THREE.Scene = new THREE.Scene()
+scene.background = new THREE.Color(0xDDDDDD);
 const sceneMeshes = new Array()
 
 
@@ -27,38 +30,60 @@ const controls = new OrbitControls(camera, renderer.domElement)
 //controls.addEventListener('change', render) 
 
 // ADD ICOSAHEDRON
-const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(4, 2)
+const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(4, 1)
 // const material: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 })
+
 const vshader = `
-uniform float u_time;
-uniform float u_radius;
+    uniform float u_time;
+    uniform float u_radius;
 
-void main() {
-  vec3 pos = position;
+    varying vec3 vNormal;
+    varying vec2 v_uv;
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
-}
+    void main() {
+        v_uv = uv;
+        vNormal = normalize(normalMatrix * normal);
+        vec3 pos = position;
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
+    }
 `
 const fshader = `
-void main()
-{
-  vec3 color = vec3(0.5,0.4,1.0);
-  gl_FragColor = vec4(color, 1.0);
-}
+    uniform sampler2D u_beachImage;
+
+    varying vec2 v_uv;
+    varying vec3 vNormal;
+
+    void main()
+    {
+        vec3 X = dFdx(vNormal);
+        vec3 Y = dFdy(vNormal);
+        vec3 normal = normalize(cross(X,Y));
+
+        float diffuse = dot(normal, vec3(1.0));
+
+        vec4 beachImage = texture2D(u_beachImage, v_uv * diffuse );
+
+        gl_FragColor = beachImage;
+        // gl_FragColor = vec4(diffuse);
+    }
 `
+const uniforms = {
+
+    u_beachImage: {value: new THREE.TextureLoader().load("img/stock/beach.jpg")},
+    u_time: { value: 1.0 },
+    u_radius: {value: 1.0},
+    u_resolution: { value: new THREE.Vector2() }
+
+}
 const material = new THREE.ShaderMaterial( {
 
-	uniforms: {
-
-		u_time: { value: 1.0 },
-        u_radius: {value: 1.0},
-		resolution: { value: new THREE.Vector2() }
-
-	},
+	uniforms,
 
 	vertexShader: vshader,
 
-	fragmentShader: fshader
+	fragmentShader: fshader,
+    // wireframe:true
 
 } );
 const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, material)
@@ -74,25 +99,26 @@ scene.add(invisiblePlane)
 
 // sceneMeshes.push(sphere,invisiblePlane) //<--- push all geo we will interact with
 sceneMeshes.push(invisiblePlane) //<--- push all geo we will interact with
+// ====================================LIGHTS=================================================
+// // LIGHTS
 
-// LIGHTS
-
-const mainSpotLight = new THREE.SpotLight(0xffffff, 25, 20, 0.4, 0.5);
-mainSpotLight.position.set(0, 1, 10);
-mainSpotLight.castShadow = true
-//mainSpotLight.shadow.bias = -.003
-mainSpotLight.shadow.mapSize.width = 2048
-mainSpotLight.shadow.mapSize.height = 2048
-scene.add(mainSpotLight);
-scene.add(mainSpotLight.target);
+// const mainSpotLight = new THREE.SpotLight(0xffffff, 25, 20, 0.4, 0.5);
+// mainSpotLight.position.set(0, 1, 10);
+// mainSpotLight.castShadow = true
+// //mainSpotLight.shadow.bias = -.003
+// mainSpotLight.shadow.mapSize.width = 2048
+// mainSpotLight.shadow.mapSize.height = 2048
+// scene.add(mainSpotLight);
+// scene.add(mainSpotLight.target);
 
 
-var ambientLightFill = new THREE.AmbientLight( '',0.1);
-scene.add(ambientLightFill);
+// var ambientLightFill = new THREE.AmbientLight( '',0.1);
+// scene.add(ambientLightFill);
 
-// LIGHT --- HELPER
-var helper = new THREE.SpotLightHelper(mainSpotLight);
-scene.add(helper);
+// // LIGHT --- HELPER
+// var helper = new THREE.SpotLightHelper(mainSpotLight);
+// scene.add(helper);
+// ====================================LIGHTS=================================================
 
 // ENVIRONMENT HDR
 const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"])
@@ -103,44 +129,29 @@ material.envMap = envTexture
 
 
 // RAYCASTER 
-renderer.domElement.addEventListener('mousemove', onMouseMove, false);
+// renderer.domElement.addEventListener('mousemove', onMouseMove, false);
 
 const raycaster = new THREE.Raycaster();
 
 
-function onMouseMove(event: MouseEvent) {
-    // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
-    const mouse = {
-        x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
-        y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
-    }
+// function onMouseMove(event: MouseEvent) {
+//     // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
+//     const mouse = {
+//         x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+//         y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+//     }
 
+//     raycaster.setFromCamera(mouse, camera);
 
-    raycaster.setFromCamera(mouse, camera);
+//     const intersects = raycaster.intersectObjects(sceneMeshes, false);
 
-    const intersects = raycaster.intersectObjects(sceneMeshes, false);
+//     if (intersects.length > 0) {
+//         const { x, y, z } = intersects[0].point
 
-    if (intersects.length > 0) {
-        const { x, y, z } = intersects[0].point
-        // invisiblePlane.position.set(x,y,z)
-        //console.log(sceneMeshes.length + " " + intersects.length)
-        //console.log(intersects[0])
-        //console.log(intersects[0].object.userData.name + " " + intersects[0].distance + " ")
-        //console.log(intersects[0].face.normal)
-        // line.position.set(0, 0, 0);
-        // line.lookAt(intersects[0].face.normal);
-        // line.position.copy(intersects[0].point);
+//         mainSpotLight.target.position.set(x, y, z)
 
-        mainSpotLight.target.position.set(x, y, z)
-
-        // let n = new THREE.Vector3();
-        // n.copy(intersects[0].face.normal);
-        // n.transformDirection(intersects[0].object.matrixWorld);
-
-        // arrowHelper.setDirection(n);
-        // arrowHelper.position.copy(intersects[0].point);
-    }
-}
+//     }
+// }
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
@@ -153,20 +164,21 @@ function onWindowResize() {
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-const gui = new GUI()
 
-const cameraFolder = gui.addFolder("Camera")
-cameraFolder.add(camera.position, "z", 0, 10, 0.01)
-cameraFolder.open()
 
-// console.log(sceneMeshes[0].length)
-// console.log(sceneMeshes[1].name)
+
+const clock = new THREE.Clock();
 
 var animate = function () {
 
     requestAnimationFrame(animate)
 
-    helper.update()
+    // helper.update() //LIGHT HELPER
+
+    uniforms.u_time.value += clock.getDelta();
+
+    icoSphere.rotateY(0.001)
+    icoSphere.rotateZ(0.001)
 
     render()
     stats.update()
