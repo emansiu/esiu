@@ -54,7 +54,7 @@ const fshader = `
 
         vec4 beachImage = texture2D(u_beachImage, v_uv * diffuse );
 
-        gl_FragColor = beachImage;
+        gl_FragColor = vec4(beachImage.rgb,1.0);
         // gl_FragColor = vec4(diffuse);
     }
 `;
@@ -98,10 +98,10 @@ sceneMeshes.push(invisiblePlane); //<--- push all geo we will interact with
 // scene.add(helper);
 // ====================================LIGHTS=================================================
 // ENVIRONMENT HDR
-const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"]);
-envTexture.mapping = THREE.CubeReflectionMapping;
+// const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"])
+// envTexture.mapping = THREE.CubeReflectionMapping
 // envTexture.mapping = THREE.CubeRefractionMapping
-material.envMap = envTexture;
+// material.envMap = envTexture
 // RAYCASTER 
 // renderer.domElement.addEventListener('mousemove', onMouseMove, false);
 const raycaster = new THREE.Raycaster();

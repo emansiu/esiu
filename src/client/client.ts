@@ -64,7 +64,7 @@ const fshader = `
 
         vec4 beachImage = texture2D(u_beachImage, v_uv * diffuse );
 
-        gl_FragColor = beachImage;
+        gl_FragColor = vec4(beachImage.rgb,1.0);
         // gl_FragColor = vec4(diffuse);
     }
 `
