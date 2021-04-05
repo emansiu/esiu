@@ -5,17 +5,16 @@ import Stats from '/jsm/libs/stats.module';
 // import { GLTFLoader } from '/jsm/loaders/GLTFLoader'
 // import { DragControls } from '/jsm/controls/DragControls'
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xDDDDDD);
 const sceneMeshes = new Array();
 // SET UP CAMERA
 const height = window.innerHeight;
 const width = window.innerWidth;
 const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
 camera.position.z = 10;
-const renderer = new THREE.WebGLRenderer();
-renderer.physicallyCorrectLights = true;
-renderer.shadowMap.enabled = true;
-renderer.outputEncoding = THREE.sRGBEncoding;
+const renderer = new THREE.WebGLRenderer({ alpha: true });
+// renderer.physicallyCorrectLights = true
+// renderer.shadowMap.enabled = true
+// renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 // renderer.context.getExtension('OES_standard_derivatives');
@@ -30,13 +29,14 @@ const vshader = `
 
     varying vec3 vNormal;
     varying vec2 v_uv;
+    varying vec3 vPosition;
 
     void main() {
         v_uv = uv;
         vNormal = normalize(normalMatrix * normal);
-        vec3 pos = position;
+        vPosition = position;
 
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( vPosition, 1.0 );
     }
 `;
 const fshader = `
@@ -46,6 +46,14 @@ const fshader = `
 
     varying vec2 v_uv;
     varying vec3 vNormal;
+    varying vec3 vPosition;
+
+    float line(float a, float b, float line_width, float edge_thickness){
+        float half_line_width = line_width * 0.5;
+        return smoothstep(a - half_line_width - edge_thickness, a - half_line_width, b) - smoothstep(a + half_line_width, a + half_line_width + edge_thickness, b);
+    }
+
+  
 
     void main()
     {
@@ -57,8 +65,10 @@ const fshader = `
 
         vec4 beachImage = texture2D(u_beachImage, v_uv * diffuse );
         
+        vec3 color = vec3(1.0) * line(vPosition.x, vPosition.y, 0.1, 0.1);
+
         gl_FragColor = vec4(beachImage.rgb,0.9);
-        // gl_FragColor = vec4(diffuse);
+        // gl_FragColor = vec4(color, 1.0);
     }
 `;
 const uniforms = {
