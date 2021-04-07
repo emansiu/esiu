@@ -1,17 +1,41 @@
 /* set variable for size multiplier applied to screen size */
 :root {
     --formBackGroundColor: rgba(225,225,225,0.8);
-    --gradientOne:25, 25, 105;
-    --gradientTwo:153, 131, 50;
+    --gradientOne:237, 244, 255;
+    --gradientTwo:196, 219, 255;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body {
-    overflow: hidden;
     margin: 0px;
+    padding:0px;
+    height:100%;
 }
 
 .gradientBG {
-    background: linear-gradient( to left top, rgb(var(--gradientOne)), rgb(var(--gradientTwo))); 
-    width: 100%;
+    background: linear-gradient( to right top, rgb(var(--gradientTwo)), rgb(var(--gradientOne))); 
+}
+
+.rootContainer{
+    flex:1;
+    display: flex;
+    align-items: center;
+    overflow:hidden;
+    position:absolute;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+}
+
+
+.threeContainer{
+    overflow: hidden;
+    width:100vw;
     height: 100%;
+    border: 6px red solid;
+    min-height: 100%;
 }

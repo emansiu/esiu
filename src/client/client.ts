@@ -1,7 +1,7 @@
 import * as THREE from '/build/three.module.js'
 import { OrbitControls } from '/jsm/controls/OrbitControls'
 import Stats from '/jsm/libs/stats.module'
-// import { GUI } from '/jsm/libs/dat.gui.module'
+import { GUI } from '/jsm/libs/dat.gui.module'
 // import { GLTFLoader } from '/jsm/loaders/GLTFLoader'
 // import { DragControls } from '/jsm/controls/DragControls'
 
@@ -12,26 +12,29 @@ const sceneMeshes = new Array()
 
 
 // SET UP CAMERA
-const height: number = window.innerHeight
-const width: number = window.innerWidth
-const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
-camera.position.z = 10
+const canvasContainer: HTMLElement = <HTMLElement>document.querySelector(".threeContainer");
 
 
-const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({alpha:true});
-// renderer.physicallyCorrectLights = true
-// renderer.shadowMap.enabled = true
-// renderer.outputEncoding = THREE.sRGBEncoding
-renderer.setSize(window.innerWidth, window.innerHeight)
-document.body.appendChild(renderer.domElement)
-// renderer.context.getExtension('OES_standard_derivatives');
+
+let height: number = canvasContainer.clientHeight;
+let width: number = canvasContainer.clientWidth;
+let landscape: boolean = height < width ? true : false
+const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(50, width/height, 0.6, 1000)
+// const camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, .001, 1000 )
+camera.position.z = 5
 
 
+const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({ antialias:true, alpha:true});
+renderer.setSize(width, height);
+canvasContainer.appendChild(renderer.domElement);
+
+console.log(height, width)
 const controls = new OrbitControls(camera, renderer.domElement)
 //controls.addEventListener('change', render) 
 
 // ADD ICOSAHEDRON
-const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(4, 1)
+const icoRadius = 1
+const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(icoRadius, 1)
 const materialPhysical: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 })
 
 const vshader = `
@@ -74,12 +77,11 @@ const fshader = `
 
         float diffuse = dot(normal, vec3(0.5));
 
-        vec4 beachImage = texture2D(u_beachImage, v_uv * diffuse );
+        vec4 beachImage = texture2D(u_beachImage, v_uv * diffuse + 0.2 );
         
         vec3 color = vec3(1.0) * line(vPosition.x, vPosition.y, 0.1, 0.1);
 
         gl_FragColor = vec4(beachImage.rgb,0.9);
-        // gl_FragColor = vec4(color, 1.0);
     }
 `
 const uniforms = {
@@ -102,6 +104,8 @@ const material = new THREE.ShaderMaterial( {
 
 } );
 material.extensions.derivatives = true;
+
+// CREATE SPHERE USING DIMENSIONS OF PAGE
 const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, material)
 icoSphere.position.set(0, 0, 0)
 scene.add(icoSphere)
@@ -113,8 +117,14 @@ const invisiblePlane: THREE.Mesh = new THREE.Mesh(invisiblePlaneGeo, invisibleMa
 invisiblePlane.visible = false
 scene.add(invisiblePlane)
 
-// sceneMeshes.push(sphere,invisiblePlane) //<--- push all geo we will interact with
-sceneMeshes.push(invisiblePlane) //<--- push all geo we will interact with
+// TEMPORARY CUBE
+// const boxGeo: THREE.BoxGeometry = new THREE.BoxGeometry(1, 1, 1)
+// const boxMesh: THREE.Mesh = new THREE.Mesh(boxGeo, materialPhysical)
+// boxMesh.rotateY(45)
+
+// scene.add(boxMesh)
+
+
 // ====================================LIGHTS=================================================
 // // LIGHTS
 
@@ -169,13 +179,47 @@ const raycaster = new THREE.Raycaster();
 //     }
 // }
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight
+const gui = new GUI()
+
+const customParameters = {
+    sFactor: 1
+}
+
+const scaleAll = () =>{
+    icoSphere.scale.set(customParameters.sFactor,customParameters.sFactor,customParameters.sFactor)
+}
+
+const icoFolder = gui.addFolder("Ico Transforms")
+icoFolder.add(icoSphere.position, "x", -10, 10)
+icoFolder.add(icoSphere.position, "y", -10, 10)
+icoFolder.add(icoSphere.position, "z", -10, 10)
+icoFolder.add(customParameters, "sFactor", 0.1, 2).onChange(scaleAll);
+icoFolder.open()
+
+const onWindowResize = () => {
+
+    const paddingSpace = 1
+
+    let w = canvasContainer.clientWidth
+    let h = canvasContainer.clientHeight
+
+    let radius = (h/w )
+    
+    console.log(`w/h: ${(canvasContainer.clientWidth/canvasContainer.clientHeight).toFixed(3)}, h/w: ${(canvasContainer.clientHeight/canvasContainer.clientWidth).toFixed(3)}, w: ${w}, h: ${h}`)
+
+    
+    let leftAlign = (Math.tan(25 * Math.PI / 180) * camera.position.z) * (w/h) * -1 + icoRadius
+
+    icoSphere.position.setX(leftAlign);
+    console.log(icoSphere.scale)
+
+    landscape = canvasContainer.clientHeight < canvasContainer.clientWidth ? true : false
+    camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight
     camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight)
     render()
 }
+window.addEventListener('resize', onWindowResize, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -185,7 +229,7 @@ document.body.appendChild(stats.dom)
 
 const clock = new THREE.Clock();
 
-var animate = function () {
+const animate = () => {
 
     requestAnimationFrame(animate)
 
@@ -193,14 +237,15 @@ var animate = function () {
 
     uniforms.u_time.value += clock.getDelta();
 
-    icoSphere.rotateY(0.001)
-    icoSphere.rotateZ(0.001)
+    icoSphere.rotateY(0.001);
+    icoSphere.rotateZ(0.001);
+    
 
     render()
     stats.update()
 };
 
-function render() {
+const render = () => {
     renderer.render(scene, camera)
 }
 animate();
