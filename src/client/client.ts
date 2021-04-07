@@ -19,7 +19,7 @@ const canvasContainer: HTMLElement = <HTMLElement>document.querySelector(".three
 let height: number = canvasContainer.clientHeight;
 let width: number = canvasContainer.clientWidth;
 let landscape: boolean = height < width ? true : false
-const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(50, width/height, 0.6, 1000)
+const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(40, width/height, 0.6, 1000)
 // const camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, .001, 1000 )
 camera.position.z = 5
 
@@ -117,12 +117,22 @@ const invisiblePlane: THREE.Mesh = new THREE.Mesh(invisiblePlaneGeo, invisibleMa
 invisiblePlane.visible = false
 scene.add(invisiblePlane)
 
-// TEMPORARY CUBE
-// const boxGeo: THREE.BoxGeometry = new THREE.BoxGeometry(1, 1, 1)
-// const boxMesh: THREE.Mesh = new THREE.Mesh(boxGeo, materialPhysical)
-// boxMesh.rotateY(45)
+const loader = new THREE.FontLoader();
 
-// scene.add(boxMesh)
+loader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
+
+	const geometry = new THREE.TextGeometry( 'Hello three.js!', {
+		font: font,
+		size: 80,
+		height: 5,
+		curveSegments: 12,
+		bevelEnabled: true,
+		bevelThickness: 10,
+		bevelSize: 8,
+		bevelOffset: 0,
+		bevelSegments: 5
+	} );
+} );
 
 
 // ====================================LIGHTS=================================================
@@ -198,20 +208,22 @@ icoFolder.open()
 
 const onWindowResize = () => {
 
-    const paddingSpace = 1
+    const paddingSpace = 0.1
 
     let w = canvasContainer.clientWidth
     let h = canvasContainer.clientHeight
 
-    let radius = (h/w )
+    let desiredRatio = w/h
     
-    console.log(`w/h: ${(canvasContainer.clientWidth/canvasContainer.clientHeight).toFixed(3)}, h/w: ${(canvasContainer.clientHeight/canvasContainer.clientWidth).toFixed(3)}, w: ${w}, h: ${h}`)
-
+    // console.log(`w/h: ${(canvasContainer.clientWidth/canvasContainer.clientHeight).toFixed(3)}, h/w: ${(canvasContainer.clientHeight/canvasContainer.clientWidth).toFixed(3)}, w: ${w}, h: ${h}`)
+    console.log(camera.fov)
     
-    let leftAlign = (Math.tan(25 * Math.PI / 180) * camera.position.z) * (w/h) * -1 + icoRadius
+    let leftAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) * -1 ) + ((1 * icoSphere.scale.x) + paddingSpace)
+    // let bottomAlign = (((Math.tan(25 * Math.PI / 180) * camera.position.z) * (h/w)) * -1 ) + ((1 * icoSphere.scale.x) + paddingSpace)
 
     icoSphere.position.setX(leftAlign);
-    console.log(icoSphere.scale)
+    // icoSphere.position.setY(bottomAlign);
+    
 
     landscape = canvasContainer.clientHeight < canvasContainer.clientWidth ? true : false
     camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight
