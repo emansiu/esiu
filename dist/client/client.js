@@ -12,7 +12,6 @@ let height = canvasContainer.clientHeight;
 let width = canvasContainer.clientWidth;
 let landscape = height < width ? true : false;
 const camera = new THREE.PerspectiveCamera(40, width / height, 0.6, 1000);
-// const camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, .001, 1000 )
 camera.position.z = 5;
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(width, height);
@@ -23,6 +22,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // ADD ICOSAHEDRON
 const icoRadius = 1;
 const icoGeo = new THREE.IcosahedronGeometry(icoRadius, 1);
+//============= MATERIALS ============
 const materialPhysical = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 });
 const vshader = `
     uniform float u_time;
@@ -86,6 +86,7 @@ const material = new THREE.ShaderMaterial({
 });
 material.extensions.derivatives = true;
 // CREATE SPHERE USING DIMENSIONS OF PAGE
+// !!!!!!!!!!!!!!!!!!! ^^^^^^^^^ TO DO ^^^^!!!!!!!!!!!!!!!!!!!!!!!!
 const icoSphere = new THREE.Mesh(icoGeo, material);
 icoSphere.position.set(0, 0, 0);
 scene.add(icoSphere);
@@ -95,41 +96,27 @@ const invisibleMat = new THREE.MeshBasicMaterial({});
 const invisiblePlane = new THREE.Mesh(invisiblePlaneGeo, invisibleMat);
 invisiblePlane.visible = false;
 scene.add(invisiblePlane);
-const loader = new THREE.FontLoader();
-loader.load('fonts/helvetiker_regular.typeface.json', function (font) {
-    const geometry = new THREE.TextGeometry('Hello three.js!', {
-        font: font,
-        size: 80,
-        height: 5,
-        curveSegments: 12,
-        bevelEnabled: true,
-        bevelThickness: 10,
-        bevelSize: 8,
-        bevelOffset: 0,
-        bevelSegments: 5
-    });
-});
 // ====================================LIGHTS=================================================
-// // LIGHTS
-// const mainSpotLight = new THREE.SpotLight(0xffffff, 25, 20, 0.4, 0.5);
-// mainSpotLight.position.set(0, 1, 10);
-// mainSpotLight.castShadow = true
-// //mainSpotLight.shadow.bias = -.003
-// mainSpotLight.shadow.mapSize.width = 2048
-// mainSpotLight.shadow.mapSize.height = 2048
-// scene.add(mainSpotLight);
-// scene.add(mainSpotLight.target);
-// var ambientLightFill = new THREE.AmbientLight( '',0.1);
-// scene.add(ambientLightFill);
-// // LIGHT --- HELPER
-// var helper = new THREE.SpotLightHelper(mainSpotLight);
-// scene.add(helper);
+// LIGHTS
+const mainSpotLight = new THREE.SpotLight(0xffffff, 25, 20, 0.4, 0.5);
+mainSpotLight.position.set(0, 1, 10);
+mainSpotLight.castShadow = true;
+//mainSpotLight.shadow.bias = -.003
+mainSpotLight.shadow.mapSize.width = 2048;
+mainSpotLight.shadow.mapSize.height = 2048;
+scene.add(mainSpotLight);
+scene.add(mainSpotLight.target);
+// MAIN SPOT LIGHT --- HELPER
+const helper = new THREE.SpotLightHelper(mainSpotLight);
+scene.add(helper);
+const ambientLightFill = new THREE.AmbientLight('', 0.1);
+scene.add(ambientLightFill);
 // ====================================LIGHTS=================================================
 // ENVIRONMENT HDR
-// const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"])
-// envTexture.mapping = THREE.CubeReflectionMapping
-// envTexture.mapping = THREE.CubeRefractionMapping
-// material.envMap = envTexture
+const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"]);
+envTexture.mapping = THREE.CubeReflectionMapping;
+envTexture.mapping = THREE.CubeRefractionMapping;
+materialPhysical.envMap = envTexture;
 // RAYCASTER 
 // renderer.domElement.addEventListener('mousemove', onMouseMove, false);
 const raycaster = new THREE.Raycaster();
@@ -182,7 +169,7 @@ document.body.appendChild(stats.dom);
 const clock = new THREE.Clock();
 const animate = () => {
     requestAnimationFrame(animate);
-    // helper.update() //LIGHT HELPER
+    helper.update(); //LIGHT HELPER
     uniforms.u_time.value += clock.getDelta();
     icoSphere.rotateY(0.001);
     icoSphere.rotateZ(0.001);
