@@ -105,3 +105,4 @@ typings/
 
 # ignore large working files
 *.psd
+*.blend
