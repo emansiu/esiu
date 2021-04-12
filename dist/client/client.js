@@ -2,52 +2,93 @@ import * as THREE from '/build/three.module.js';
 import { OrbitControls } from '/jsm/controls/OrbitControls';
 import Stats from '/jsm/libs/stats.module';
 import { GUI } from '/jsm/libs/dat.gui.module';
-// import { GLTFLoader } from '/jsm/loaders/GLTFLoader'
+import { GLTFLoader } from '/jsm/loaders/GLTFLoader';
 // import { DragControls } from '/jsm/controls/DragControls'
+// SET UP SCENE
 const scene = new THREE.Scene();
 const sceneMeshes = new Array();
 // SET UP CAMERA
 const canvasContainer = document.querySelector(".threeContainer");
+// WINDOW ATTRIBUTES
 let height = canvasContainer.clientHeight;
 let width = canvasContainer.clientWidth;
 let landscape = height < width ? true : false;
+// CAMERA
 const camera = new THREE.PerspectiveCamera(40, width / height, 0.6, 1000);
 camera.position.z = 5;
+// RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(width, height);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 canvasContainer.appendChild(renderer.domElement);
-console.log(height, width);
 const controls = new OrbitControls(camera, renderer.domElement);
 //controls.addEventListener('change', render) 
 // ADD ICOSAHEDRON
 const icoRadius = 1;
 const icoGeo = new THREE.IcosahedronGeometry(icoRadius, 1);
+// ====================================LIGHTS=================================================
+// LIGHTS
+const mainSpotLight = new THREE.SpotLight(0xffffff, 2, 20, 0.4, 0.5);
+mainSpotLight.position.set(0, 1, 10);
+mainSpotLight.castShadow = true;
+//mainSpotLight.shadow.bias = -.003
+mainSpotLight.shadow.mapSize.width = 2048;
+mainSpotLight.shadow.mapSize.height = 2048;
+scene.add(mainSpotLight);
+scene.add(mainSpotLight.target);
+// MAIN SPOT LIGHT --- HELPER
+// const helper = new THREE.SpotLightHelper(mainSpotLight);
+const helper = new THREE.CameraHelper(mainSpotLight.shadow.camera);
+scene.add(helper);
+const ambientLightFill = new THREE.AmbientLight('', 0.1);
+scene.add(ambientLightFill);
 //============= MATERIALS ============
-const materialPhysical = new THREE.MeshPhysicalMaterial({ reflectivity: 0.0, roughness: 0.9, metalness: 0.0, color: 0x000066 });
+const materialPhysical = new THREE.MeshPhysicalMaterial({ reflectivity: 1.0, roughness: 0.0, metalness: 0.4, color: 0xffffff });
+// CUSTOM SHADER/MATERIAL
+const uniforms = THREE.UniformsUtils.merge([
+    THREE.UniformsLib["common"],
+    THREE.UniformsLib["lights"],
+    mainSpotLight
+]);
+uniforms.u_beachImage = { value: new THREE.TextureLoader().load("img/stock/beach.jpg") },
+    uniforms.u_color = { value: new THREE.Color(0xa6e4fa) };
+uniforms.u_light_position = { value: mainSpotLight.position.clone() };
+uniforms.u_rim_color = { value: new THREE.Color(0xffffff) };
+uniforms.u_rim_strength = { value: 1.6 };
+uniforms.u_rim_width = { value: 0.6 };
+uniforms.u_time = { value: 1.0 },
+    uniforms.u_radius = { value: 1.0 },
+    uniforms.u_resolution = { value: new THREE.Vector2() };
 const vshader = `
+    
     uniform float u_time;
     uniform float u_radius;
 
     varying vec3 vNormal;
     varying vec2 v_uv;
     varying vec3 vPosition;
+    
 
     void main() {
+
         v_uv = uv;
         vNormal = normalize(normalMatrix * normal);
         vPosition = position;
+        
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4( vPosition, 1.0 );
     }
 `;
 const fshader = `
-    // #extension GL_OES_standard_derivatives : enable
+    
 
     uniform sampler2D u_beachImage;
 
     varying vec2 v_uv;
     varying vec3 vNormal;
     varying vec3 vPosition;
+
 
     float line(float a, float b, float line_width, float edge_thickness){
         float half_line_width = line_width * 0.5;
@@ -62,60 +103,51 @@ const fshader = `
         vec3 Y = dFdy(vNormal);
         vec3 normal = normalize(cross(X,Y));
 
+
         float diffuse = dot(normal, vec3(0.5));
 
         vec4 beachImage = texture2D(u_beachImage, v_uv * diffuse + 0.2 );
         
         vec3 color = vec3(1.0) * line(vPosition.x, vPosition.y, 0.1, 0.1);
 
-        gl_FragColor = vec4(beachImage.rgb,0.9);
+        gl_FragColor = vec4(beachImage.rgb,1.0);
     }
 `;
-const uniforms = {
-    u_beachImage: { value: new THREE.TextureLoader().load("img/stock/beach.jpg") },
-    u_time: { value: 1.0 },
-    u_radius: { value: 1.0 },
-    u_resolution: { value: new THREE.Vector2() }
-};
 const material = new THREE.ShaderMaterial({
     uniforms,
     vertexShader: vshader,
     fragmentShader: fshader,
-    // wireframe:true
-    transparent: true
+    lights: true,
+    transparent: true,
 });
 material.extensions.derivatives = true;
 // CREATE SPHERE USING DIMENSIONS OF PAGE
 // !!!!!!!!!!!!!!!!!!! ^^^^^^^^^ TO DO ^^^^!!!!!!!!!!!!!!!!!!!!!!!!
 const icoSphere = new THREE.Mesh(icoGeo, material);
 icoSphere.position.set(0, 0, 0);
+icoSphere.castShadow = true;
+icoSphere.receiveShadow = true;
 scene.add(icoSphere);
+const ballGeo = new THREE.SphereGeometry(1, 6, 6);
+const ballMesh = new THREE.Mesh(ballGeo, materialPhysical);
+ballMesh.receiveShadow = true;
+ballMesh.castShadow = true;
+ballMesh.position.x = 2;
+scene.add(ballMesh);
 // ADD INVISIBLE PLANE
 const invisiblePlaneGeo = new THREE.PlaneBufferGeometry(50, 50, 1, 1);
-const invisibleMat = new THREE.MeshBasicMaterial({});
-const invisiblePlane = new THREE.Mesh(invisiblePlaneGeo, invisibleMat);
-invisiblePlane.visible = false;
+const invisibleMat = new THREE.MeshBasicMaterial({ color: 'blue' });
+const invisiblePlane = new THREE.Mesh(invisiblePlaneGeo, materialPhysical);
+invisiblePlane.visible = true;
+invisiblePlane.receiveShadow = true;
+invisiblePlane.castShadow = true;
+invisiblePlane.position.z = -1;
 scene.add(invisiblePlane);
-// ====================================LIGHTS=================================================
-// LIGHTS
-const mainSpotLight = new THREE.SpotLight(0xffffff, 25, 20, 0.4, 0.5);
-mainSpotLight.position.set(0, 1, 10);
-mainSpotLight.castShadow = true;
-//mainSpotLight.shadow.bias = -.003
-mainSpotLight.shadow.mapSize.width = 2048;
-mainSpotLight.shadow.mapSize.height = 2048;
-scene.add(mainSpotLight);
-scene.add(mainSpotLight.target);
-// MAIN SPOT LIGHT --- HELPER
-const helper = new THREE.SpotLightHelper(mainSpotLight);
-scene.add(helper);
-const ambientLightFill = new THREE.AmbientLight('', 0.1);
-scene.add(ambientLightFill);
 // ====================================LIGHTS=================================================
 // ENVIRONMENT HDR
 const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"]);
 envTexture.mapping = THREE.CubeReflectionMapping;
-envTexture.mapping = THREE.CubeRefractionMapping;
+// envTexture.mapping = THREE.CubeRefractionMapping
 materialPhysical.envMap = envTexture;
 // RAYCASTER 
 // renderer.domElement.addEventListener('mousemove', onMouseMove, false);
@@ -151,12 +183,10 @@ const onWindowResize = () => {
     let w = canvasContainer.clientWidth;
     let h = canvasContainer.clientHeight;
     let desiredRatio = w / h;
-    // console.log(`w/h: ${(canvasContainer.clientWidth/canvasContainer.clientHeight).toFixed(3)}, h/w: ${(canvasContainer.clientHeight/canvasContainer.clientWidth).toFixed(3)}, w: ${w}, h: ${h}`)
     console.log(camera.fov);
-    let leftAlign = (((Math.tan((camera.fov / 2) * Math.PI / 180) * camera.position.z) * desiredRatio) * -1) + ((1 * icoSphere.scale.x) + paddingSpace);
-    // let bottomAlign = (((Math.tan(25 * Math.PI / 180) * camera.position.z) * (h/w)) * -1 ) + ((1 * icoSphere.scale.x) + paddingSpace)
-    icoSphere.position.setX(leftAlign);
-    // icoSphere.position.setY(bottomAlign);
+    // formula for left align below
+    // let leftAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) * -1 ) + ((1 * icoSphere.scale.x) + paddingSpace)
+    // icoSphere.position.setX(leftAlign);
     landscape = canvasContainer.clientHeight < canvasContainer.clientWidth ? true : false;
     camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
     camera.updateProjectionMatrix();
@@ -166,6 +196,24 @@ const onWindowResize = () => {
 window.addEventListener('resize', onWindowResize, false);
 const stats = Stats();
 document.body.appendChild(stats.dom);
+const loader = new GLTFLoader();
+loader.load('models/EmanuelSiu_Text_Curved.gltf', function (gltf) {
+    gltf.scene.traverse(function (child) {
+        if (child.isMesh) {
+            let m = child;
+            m.receiveShadow = true;
+            m.castShadow = true;
+            m.material = materialPhysical;
+            m.position.setZ(1.5);
+            m.scale.set(0.6, 0.6, 0.6);
+        }
+    });
+    scene.add(gltf.scene);
+}, (xhr) => {
+    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+}, (error) => {
+    console.log(error);
+});
 const clock = new THREE.Clock();
 const animate = () => {
     requestAnimationFrame(animate);
