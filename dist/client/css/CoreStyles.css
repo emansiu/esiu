@@ -1,8 +1,10 @@
 /* set variable for size multiplier applied to screen size */
 :root {
     --formBackGroundColor: rgba(225,225,225,0.8);
-    --gradientOne:254, 255, 235;
-    --gradientTwo:104, 166, 165;
+    /* --gradientOne:254, 255, 235;
+    --gradientTwo:104, 166, 165; */
+    --gradientOne:40,40,40;
+    --gradientTwo:0,0,0;
 }
 
 * {

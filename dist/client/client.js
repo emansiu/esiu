@@ -24,22 +24,29 @@ renderer.setSize(width, height);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 canvasContainer.appendChild(renderer.domElement);
+var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, stencilBuffer: true };
+var renderTarget = new THREE.WebGLRenderTarget(width, height, parameters);
 // EFFECTS COMPOSER
 const composerResolution = new THREE.Vector2(1024, 1024);
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
+const composer = new EffectComposer(renderer, renderTarget);
+const renderPass = new RenderPass(scene, camera);
+// renderPass.clearColor = new THREE.Color(0, 0, 0);
+// renderPass.clearAlpha = 0;
+// renderPass.clear = false;
+composer.addPass(renderPass);
 // BLOOM PARAMETERS
 const bloom = {
-    strength: 1.5,
+    strength: 1.2,
     radius: 1.0,
     threshold: 0.75
 };
-composer.addPass(new UnrealBloomPass(composerResolution, bloom.strength, bloom.radius, bloom.threshold));
+const bloomPass = new UnrealBloomPass(composerResolution, bloom.strength, bloom.radius, bloom.threshold);
+composer.addPass(bloomPass);
+// CONTROLS
 const controls = new OrbitControls(camera, renderer.domElement);
-//controls.addEventListener('change', render) 
 // ====================================LIGHTS=================================================
-// LIGHTS
-const mainSpotLight = new THREE.SpotLight(0xffffff, 1, 20, 0.4, 0.5);
+// MAIN SPOTLIGHT
+const mainSpotLight = new THREE.SpotLight(0xffffff, 1, 15, 0.2, 0.6);
 mainSpotLight.position.set(0, 1, 10);
 mainSpotLight.castShadow = true;
 // mainSpotLight.shadow.bias = -.003
@@ -56,7 +63,7 @@ const ambientLightFill = new THREE.AmbientLight('', 0.2);
 scene.add(ambientLightFill);
 //============= MATERIALS ============
 const materialPhysical = new THREE.MeshPhysicalMaterial({ reflectivity: 1.0, roughness: 0.1, metalness: 0.8, color: 0xffffff });
-const backgroundMaterial = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+const backgroundMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
 // CUSTOM SHADER/MATERIAL
 const uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["lights"],
@@ -190,8 +197,15 @@ const fractedMaterial = new THREE.ShaderMaterial({
 fractedMaterial.extensions.derivatives = true;
 // materialPhysical.onBeforeCompile = aha => console.log(aha.vertexShader, aha.fragmentShader)
 // =========== GEOMETRY ==================
-// CREATE SPHERE USING DIMENSIONS OF PAGE
+// CREATE SPHERE USING DIMENSIONS OF PAGE &&&& ALSO MAKE MESH CLASS CLASS / CONSTRUCTOR
 // !!!!!!!!!!!!!!!!!!! ^^^^^^^^^ TO DO ^^^^!!!!!!!!!!!!!!!!!!!!!!!!
+// const MeshClass = class {
+//     constructor(name:string, geo:any, material:any) {
+//         this.name = name;
+//         this.geo = geo;
+//         this.material = material;
+//     }
+// }
 // ADD ICOSAHEDRON
 const icoRadius = 0.5;
 const icoGeo = new THREE.IcosahedronGeometry(icoRadius, 1);
@@ -200,16 +214,21 @@ icoSphere.position.set(0, 0, 1);
 icoSphere.castShadow = true;
 icoSphere.receiveShadow = true;
 scene.add(icoSphere);
-// const ballGeo: THREE.SphereGeometry = new THREE.SphereGeometry(1,6,6)
-// const ballMesh: THREE.Mesh = new THREE.Mesh(ballGeo,materialPhysical);
-// ballMesh.receiveShadow = true
-// ballMesh.castShadow = true
-// ballMesh.position.x = 2;
-// scene.add(ballMesh)
+const ballGeo = new THREE.SphereGeometry(0.2, 10, 10);
+const ball_01 = new THREE.Mesh(ballGeo, backgroundMaterial);
+ball_01.receiveShadow = true;
+ball_01.castShadow = true;
+ball_01.position.set(-1, -1, 1);
+const ball_02 = new THREE.Mesh(ballGeo, backgroundMaterial);
+ball_02.receiveShadow = true;
+ball_02.castShadow = true;
+ball_02.position.set(1, -1, 1);
+scene.add(ball_01);
+scene.add(ball_02);
 // ADD INVISIBLE PLANE
 const invisiblePlaneGeo = new THREE.PlaneBufferGeometry(50, 50, 1, 1);
 const backgroundPlane = new THREE.Mesh(invisiblePlaneGeo, backgroundMaterial);
-backgroundPlane.visible = true;
+backgroundPlane.visible = false;
 backgroundPlane.receiveShadow = true;
 backgroundPlane.castShadow = true;
 // backgroundPlane.position.z = -1;
