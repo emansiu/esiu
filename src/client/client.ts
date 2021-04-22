@@ -27,11 +27,19 @@ let landscape: boolean = height < width ? true : false
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(40, width / height, 0.6, 1000)
 camera.position.z = 5
 
+// TEXTURES
+const textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
+const bgTexture = textureLoader.load( 'https://www.guardiandatadestruction.com/wp-content/uploads/2016/02/Blue-Gradient-Bg.jpg' );
+
+scene.background = bgTexture;
+
 // RENDERER
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(width, height);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(new THREE.Color('#21282a'),1)
+
 canvasContainer.appendChild(renderer.domElement);
 
 var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, stencilBuffer: true };
@@ -49,12 +57,13 @@ composer.addPass(renderPass);
 
 // BLOOM PARAMETERS
 const bloom = {
-    strength: 1.2,
+    strength: 1.0,
     radius: 1.0,
     threshold: 0.75
 }
 const bloomPass = new UnrealBloomPass( composerResolution, bloom.strength, bloom.radius, bloom.threshold)
 composer.addPass(bloomPass);
+
 
 
 // CONTROLS
@@ -99,7 +108,7 @@ const uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["common"]
 ])
 
-uniforms.u_beachImage = { value: new THREE.TextureLoader().load("img/stock/beach.jpg") },
+uniforms.u_beachImage = { value: textureLoader.load("img/stock/beach.jpg") },
 uniforms.u_color = { value: new THREE.Color(0xa6e4fa) };
 uniforms.u_light_position = { value: mainSpotLight.position.clone() };
 uniforms.u_light_intensity = { value: mainSpotLight.intensity };
@@ -275,8 +284,8 @@ scene.add(backgroundPlane)
 sceneMeshes.push(backgroundPlane)
 
 // ======== IMPORT OBJECTS =============
-const loader = new GLTFLoader()
-loader.load(
+const gltfLoader = new GLTFLoader()
+gltfLoader.load(
     'models/EmanuelSiu_Text_Curved.gltf',
     function (gltf) {
         gltf.scene.traverse(function (child) {

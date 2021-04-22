@@ -18,11 +18,16 @@ let landscape = height < width ? true : false;
 // CAMERA
 const camera = new THREE.PerspectiveCamera(40, width / height, 0.6, 1000);
 camera.position.z = 5;
+// TEXTURES
+const textureLoader = new THREE.TextureLoader();
+const bgTexture = textureLoader.load('https://www.guardiandatadestruction.com/wp-content/uploads/2016/02/Blue-Gradient-Bg.jpg');
+scene.background = bgTexture;
 // RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(width, height);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(new THREE.Color('#21282a'), 1);
 canvasContainer.appendChild(renderer.domElement);
 var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, stencilBuffer: true };
 var renderTarget = new THREE.WebGLRenderTarget(width, height, parameters);
@@ -36,7 +41,7 @@ const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 // BLOOM PARAMETERS
 const bloom = {
-    strength: 1.2,
+    strength: 1.0,
     radius: 1.0,
     threshold: 0.75
 };
@@ -69,7 +74,7 @@ const uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["lights"],
     THREE.UniformsLib["common"]
 ]);
-uniforms.u_beachImage = { value: new THREE.TextureLoader().load("img/stock/beach.jpg") },
+uniforms.u_beachImage = { value: textureLoader.load("img/stock/beach.jpg") },
     uniforms.u_color = { value: new THREE.Color(0xa6e4fa) };
 uniforms.u_light_position = { value: mainSpotLight.position.clone() };
 uniforms.u_light_intensity = { value: mainSpotLight.intensity };
@@ -235,8 +240,8 @@ backgroundPlane.castShadow = true;
 scene.add(backgroundPlane);
 sceneMeshes.push(backgroundPlane);
 // ======== IMPORT OBJECTS =============
-const loader = new GLTFLoader();
-loader.load('models/EmanuelSiu_Text_Curved.gltf', function (gltf) {
+const gltfLoader = new GLTFLoader();
+gltfLoader.load('models/EmanuelSiu_Text_Curved.gltf', function (gltf) {
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             let m = child;
