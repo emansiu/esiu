@@ -20,7 +20,7 @@ const camera = new THREE.PerspectiveCamera(40, width / height, 0.6, 1000);
 camera.position.z = 5;
 // TEXTURES
 const textureLoader = new THREE.TextureLoader();
-const bgTexture = textureLoader.load('https://www.guardiandatadestruction.com/wp-content/uploads/2016/02/Blue-Gradient-Bg.jpg');
+const bgTexture = textureLoader.load('https://i.imgur.com/wkjbzYZ.png');
 scene.background = bgTexture;
 // RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -35,23 +35,26 @@ var renderTarget = new THREE.WebGLRenderTarget(width, height, parameters);
 const composerResolution = new THREE.Vector2(1024, 1024);
 const composer = new EffectComposer(renderer, renderTarget);
 const renderPass = new RenderPass(scene, camera);
-// renderPass.clearColor = new THREE.Color(0, 0, 0);
-// renderPass.clearAlpha = 0;
-// renderPass.clear = false;
 composer.addPass(renderPass);
 // BLOOM PARAMETERS
 const bloom = {
-    strength: 1.0,
+    strength: 0.8,
     radius: 1.0,
     threshold: 0.75
 };
 const bloomPass = new UnrealBloomPass(composerResolution, bloom.strength, bloom.radius, bloom.threshold);
 composer.addPass(bloomPass);
-// CONTROLS
+// ORBIT CONTROLS
 const controls = new OrbitControls(camera, renderer.domElement);
+// controls.minPolarAngle = Math.PI/2.3;
+// controls.maxPolarAngle = (Math.PI) - (Math.PI/2.3);
+// controls.minAzimuthAngle = - Math.PI /20
+// controls.maxAzimuthAngle = Math.PI /20
+// controls.enablePan = false;
+// controls.enableZoom = false;
 // ====================================LIGHTS=================================================
-// MAIN SPOTLIGHT
-const mainSpotLight = new THREE.SpotLight(0xffffff, 1, 15, 0.2, 0.6);
+//-------------------------------------- MAIN SPOTLIGHT
+const mainSpotLight = new THREE.SpotLight(0xffffff, 0.7, 15, 0.4, 0.6, 1); //color, intensity, distance, angle, penumbra, decay
 mainSpotLight.position.set(0, 1, 10);
 mainSpotLight.castShadow = true;
 // mainSpotLight.shadow.bias = -.003
@@ -59,25 +62,32 @@ mainSpotLight.shadow.mapSize.width = 2048;
 mainSpotLight.shadow.mapSize.height = 2048;
 // mainSpotLight.shadow.radius = 8
 scene.add(mainSpotLight);
-scene.add(mainSpotLight.target);
+//-------------------------------- TOP DOWN SUPPORT SPOTLIGHT
+const supportSpotLight = new THREE.SpotLight(0xffffff, 1.2, 16, 0.2, 0.6); //color, intensity, distance, angle, penumbra, decay
+supportSpotLight.position.set(0, 10, 10);
+supportSpotLight.castShadow = false;
+scene.add(supportSpotLight);
 // MAIN SPOT LIGHT --- HELPER
 // const helper = new THREE.SpotLightHelper(mainSpotLight);
-const helper = new THREE.CameraHelper(mainSpotLight.shadow.camera);
-scene.add(helper);
-const ambientLightFill = new THREE.AmbientLight('', 0.2);
+// const helper = new THREE.CameraHelper(mainSpotLight.shadow.camera);
+// scene.add(helper);
+//----------------------------------- AMBIENT LIGHT
+const ambientLightFill = new THREE.AmbientLight('', 0.1);
 scene.add(ambientLightFill);
 //============= MATERIALS ============
+const shadowMaterial = new THREE.ShadowMaterial();
+shadowMaterial.opacity = 0.5;
 const materialPhysical = new THREE.MeshPhysicalMaterial({ reflectivity: 1.0, roughness: 0.1, metalness: 0.8, color: 0xffffff });
-const backgroundMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-// CUSTOM SHADER/MATERIAL
+const backgroundMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map: bgTexture });
+// CUSTOM FRACTED SHADER/MATERIAL
 const uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["lights"],
     THREE.UniformsLib["common"]
 ]);
 uniforms.u_beachImage = { value: textureLoader.load("img/stock/beach.jpg") },
     uniforms.u_color = { value: new THREE.Color(0xa6e4fa) };
-uniforms.u_light_position = { value: mainSpotLight.position.clone() };
-uniforms.u_light_intensity = { value: mainSpotLight.intensity };
+// uniforms.u_light_position = { value: mainSpotLight.position.clone() };
+// uniforms.u_light_intensity = { value: mainSpotLight.intensity };
 uniforms.u_rim_color = { value: new THREE.Color(0xffffff) };
 uniforms.u_rim_strength = { value: 1.6 };
 uniforms.u_rim_width = { value: 0.6 };
@@ -137,60 +147,8 @@ const fshader = `
 
         float brightness = dot( worldNormal, lightVector );
 
-        gl_FragColor = vec4(beachImage.rgb, 1.0);
+        gl_FragColor = vec4(beachImage.rgb, 0.8);
     }
-`;
-const vVertexLights = `
-
-
-
-varying vec3 vPosition;
-varying vec3 vNormal;
-varying vec2 vUv;
-
-void main() {
-
-
-    vNormal = normal;
-    vUv = uv;
-    vPosition = position;
-
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-
-}
-`;
-const vFragLights = `
-uniform mat4 modelMatrix;
-
-uniform vec3 u_color;
-uniform vec3 u_light_position;
-
-// Example varyings passed from the vertex shader
-varying vec3 vPosition;
-varying vec3 vNormal;
-varying vec2 vUv;
-varying vec2 vUv2;
-
-void main() {
-
-
-    vec3 worldPosition = ( modelMatrix * vec4( vPosition, 1.0 )).xyz;
-
-
-    vec3 worldNormal = normalize( vec3( modelMatrix * vec4( vNormal, 0.0 ) ) );
-
-    vec3 lightVector = normalize( u_light_position - worldPosition );
-
-    float brightness = dot( worldNormal, lightVector );
-    // float brightness = dot( vec3(0.0, 1.0, 0.0), vNormal );
-
-    // Fragment shaders set the gl_FragColor, which is a vector4 of
-    // ( red, green, blue, alpha ).
-    gl_FragColor = vec4( u_color.rgb * brightness, 1.0 );
-    // gl_FragColor = vec4( 1.0 );
-
-}
 `;
 const fractedMaterial = new THREE.ShaderMaterial({
     uniforms,
@@ -201,7 +159,7 @@ const fractedMaterial = new THREE.ShaderMaterial({
 });
 fractedMaterial.extensions.derivatives = true;
 // materialPhysical.onBeforeCompile = aha => console.log(aha.vertexShader, aha.fragmentShader)
-// =========== GEOMETRY ==================
+// =========== GEOMETRY =============================
 // CREATE SPHERE USING DIMENSIONS OF PAGE &&&& ALSO MAKE MESH CLASS CLASS / CONSTRUCTOR
 // !!!!!!!!!!!!!!!!!!! ^^^^^^^^^ TO DO ^^^^!!!!!!!!!!!!!!!!!!!!!!!!
 // const MeshClass = class {
@@ -211,6 +169,28 @@ fractedMaterial.extensions.derivatives = true;
 //         this.material = material;
 //     }
 // }
+//---------- CREATE SOME TEXT
+const textLoader = new THREE.FontLoader();
+let textMesh;
+textLoader.load('fonts/helvetiker_regular.typeface.json', function (font) {
+    const textGeo = new THREE.TextGeometry('Home', {
+        font: font,
+        size: 0.25,
+        height: 0.05,
+        curveSegments: 16,
+        bevelEnabled: true,
+        bevelThickness: .01,
+        bevelSize: 0.006,
+        bevelOffset: 0,
+        bevelSegments: 4
+    });
+    textMesh = new THREE.Mesh(textGeo, materialPhysical);
+    textMesh.position.set(0, 0, 2);
+    scene.add(textMesh);
+    const boundingBox = new THREE.Box3();
+    console.log(textMesh.geometry.computeBoundingBox());
+    // console.log(bSize)
+});
 // ADD ICOSAHEDRON
 const icoRadius = 0.5;
 const icoGeo = new THREE.IcosahedronGeometry(icoRadius, 1);
@@ -230,10 +210,10 @@ ball_02.castShadow = true;
 ball_02.position.set(1, -1, 1);
 scene.add(ball_01);
 scene.add(ball_02);
-// ADD INVISIBLE PLANE
-const invisiblePlaneGeo = new THREE.PlaneBufferGeometry(50, 50, 1, 1);
+// POTENTIAL BACKGROUND PLANE MESH
+const invisiblePlaneGeo = new THREE.PlaneBufferGeometry(10, 5, 10, 10);
 const backgroundPlane = new THREE.Mesh(invisiblePlaneGeo, backgroundMaterial);
-backgroundPlane.visible = false;
+backgroundPlane.visible = true;
 backgroundPlane.receiveShadow = true;
 backgroundPlane.castShadow = true;
 // backgroundPlane.position.z = -1;
@@ -265,21 +245,21 @@ envTexture.mapping = THREE.CubeReflectionMapping;
 // envTexture.mapping = THREE.CubeRefractionMapping
 materialPhysical.envMap = envTexture;
 // ======== RAYCASTER ==========
-renderer.domElement.addEventListener('mousemove', onMouseMove, false);
-const raycaster = new THREE.Raycaster();
-function onMouseMove(event) {
-    // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
-    const mouse = {
-        x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
-        y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
-    };
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(sceneMeshes, false);
-    if (intersects.length > 0) {
-        const { x, y, z } = intersects[0].point;
-        mainSpotLight.target.position.set(x, y, z);
-    }
-}
+// renderer.domElement.addEventListener('mousemove', onMouseMove, false);
+// const raycaster = new THREE.Raycaster();
+// function onMouseMove(event: MouseEvent) {
+//     // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
+//     const mouse = {
+//         x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+//         y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+//     }
+//     raycaster.setFromCamera(mouse, camera);
+//     const intersects = raycaster.intersectObjects(sceneMeshes, false);
+//     if (intersects.length > 0) {
+//         const { x, y, z } = intersects[0].point
+//         mainSpotLight.target.position.set(x, y, z)
+//     }
+// }
 // ============ GUI ============-
 const gui = new GUI();
 const customParameters = {
@@ -294,18 +274,33 @@ icoFolder.add(icoSphere.position, "y", -10, 10);
 icoFolder.add(icoSphere.position, "z", -10, 10);
 icoFolder.add(customParameters, "sFactor", 0.1, 2).onChange(scaleAll);
 icoFolder.open();
-const lightFolder = gui.addFolder("Light Properties");
-lightFolder.add(mainSpotLight, "intensity", 0, 10);
-lightFolder.open();
-const onWindowResize = () => {
-    const paddingSpace = 0.1;
+// const lightFolder = gui.addFolder("Light Properties")
+// lightFolder.add(mainSpotLight, "intensity", 0, 10)
+// lightFolder.open()
+const leftAlign = (object) => {
     let w = canvasContainer.clientWidth;
     let h = canvasContainer.clientHeight;
     let desiredRatio = w / h;
-    console.log(camera.fov);
+    let leftAlign = (((Math.tan((camera.fov / 2) * Math.PI / 180) * (camera.position.z - object.position.z)) * desiredRatio) * -1);
+    object.position.setX(leftAlign);
+    // console.log((((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) * -1 ))
+    // console.log((((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) ))
+    console.log(icoSphere.position);
+};
+const onWindowResize = () => {
+    // FOV FOR US IS 40
+    const paddingSpace = 0.1;
+    // let w = canvasContainer.clientWidth
+    // let h = canvasContainer.clientHeight
+    // let desiredRatio = w / h
     // formula for left align below
     // let leftAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) * -1 ) + ((1 * icoSphere.scale.x) + paddingSpace)
     // icoSphere.position.setX(leftAlign);
+    // formula for left align below
+    // let leftAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - textMesh.position.z)) *desiredRatio) * -1 )
+    // textMesh.position.setX(leftAlign);
+    // leftAlign(textMesh);
+    leftAlign(icoSphere);
     landscape = canvasContainer.clientHeight < canvasContainer.clientWidth ? true : false;
     camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
     camera.updateProjectionMatrix();
@@ -320,17 +315,16 @@ document.body.appendChild(stats.dom);
 const clock = new THREE.Clock();
 const animate = () => {
     requestAnimationFrame(animate);
-    helper.update(); //LIGHT HELPER
+    // helper.update() //LIGHT HELPER
     uniforms.u_time.value += clock.getDelta();
     icoSphere.rotateY(0.001);
     icoSphere.rotateZ(0.001);
     // icoSphere.position.y = Math.sin(clock.elapsedTime)/18;
-    mainSpotLight.updateWorldMatrix;
+    // mainSpotLight.updateWorldMatrix
     render();
     stats.update();
 };
 const render = () => {
-    // renderer.render(scene, camera)
     composer.render();
 };
 animate();

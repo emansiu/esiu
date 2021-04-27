@@ -27,6 +27,8 @@ class App {
         // unreal bloom pass and dependenceies
         app.use('/jsm/postprocessing/UnrealBloomPass.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js')))
         app.use('/jsm/shaders/LuminosityHighPassShader.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js')))
+        // fonts to serve
+        app.use('/fonts/helvetiker_regular.typeface.json', express.static(path.join(__dirname, '../../node_modules/three/examples/fonts/helvetiker_regular.typeface.json')))
         this.server = new http.Server(app);
     }
 
