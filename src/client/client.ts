@@ -6,6 +6,7 @@ import { GLTFLoader } from '/jsm/loaders/GLTFLoader'
 import { EffectComposer } from '/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from '/jsm/postprocessing/RenderPass.js'
 import {UnrealBloomPass} from '/jsm/postprocessing/UnrealBloomPass.js'
+import { text } from 'express'
 // import { DragControls } from '/jsm/controls/DragControls'
 
 
@@ -67,12 +68,12 @@ composer.addPass(bloomPass);
 // ORBIT CONTROLS
 
 const controls = new OrbitControls(camera, renderer.domElement)
-// controls.minPolarAngle = Math.PI/2.3;
-// controls.maxPolarAngle = (Math.PI) - (Math.PI/2.3);
-// controls.minAzimuthAngle = - Math.PI /20
-// controls.maxAzimuthAngle = Math.PI /20
-// controls.enablePan = false;
-// controls.enableZoom = false;
+controls.minPolarAngle = Math.PI/2.3;
+controls.maxPolarAngle = (Math.PI) - (Math.PI/2.3);
+controls.minAzimuthAngle = - Math.PI /20
+controls.maxAzimuthAngle = Math.PI /20
+controls.enablePan = false;
+controls.enableZoom = false;
 
 
 
@@ -115,7 +116,7 @@ shadowMaterial.opacity = 0.5;
 
 const materialPhysical: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 1.0, roughness: 0.1, metalness: 0.8, color: 0xffffff });
 
-const backgroundMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map:bgTexture});
+const backgroundMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map:bgTexture, displacementMap:bgTexture, displacementScale:2});
 
 
 // CUSTOM FRACTED SHADER/MATERIAL
@@ -223,9 +224,9 @@ const textLoader = new THREE.FontLoader();
 let textMesh:any;
 textLoader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
 
-	const textGeo = new THREE.TextGeometry( 'Home', {
+	const textGeo = new THREE.TextGeometry( 'About', {
 		font: font,
-		size: 0.25,
+		size: 0.10 * screenMultiplier,
 		height: 0.05,
 		curveSegments: 16,
 		bevelEnabled: true,
@@ -237,19 +238,26 @@ textLoader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
 
     
     textMesh = new THREE.Mesh(textGeo, materialPhysical)
-    textMesh.position.set(0,0,2)
+    textMesh.castShadow = true;
+    textMesh.position.set(-0.19 * screenMultiplier,-0.8,1)
     scene.add(textMesh)
-
-    const boundingBox = new THREE.Box3();
-    console.log(textMesh.geometry.computeBoundingBox());
-
-    // console.log(bSize)
 
 } );
 
 
-// ADD ICOSAHEDRON
-const icoRadius = 0.5
+//------- ADD ICOSAHEDRON
+// const icoRadius = 0.5
+let icoRadius:number ;
+
+if (landscape){
+    icoRadius = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (height/width)) * 1 )/2
+    
+} else {
+    icoRadius = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (width/height)) * 1 )/2
+}
+const screenMultiplier:number =  (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (width/height)) )
+console.log(screenMultiplier)
+
 const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(icoRadius, 1)
 
 const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, fractedMaterial)
@@ -258,17 +266,8 @@ icoSphere.castShadow = true;
 icoSphere.receiveShadow = true;
 scene.add(icoSphere)
 
-const ballGeo: THREE.SphereGeometry = new THREE.SphereGeometry(0.2,10,10)
-const ball_01: THREE.Mesh = new THREE.Mesh(ballGeo, backgroundMaterial);
-ball_01.receiveShadow = true
-ball_01.castShadow = true
-ball_01.position.set(-1,-1,1)
-const ball_02: THREE.Mesh = new THREE.Mesh(ballGeo, backgroundMaterial);
-ball_02.receiveShadow = true
-ball_02.castShadow = true
-ball_02.position.set(1,-1,1)
-scene.add(ball_01)
-scene.add(ball_02)
+
+
 
 // POTENTIAL BACKGROUND PLANE MESH
 const invisiblePlaneGeo: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(10, 5, 10, 10)
@@ -285,15 +284,19 @@ const gltfLoader = new GLTFLoader()
 gltfLoader.load(
     'models/EmanuelSiu_Text_Curved.gltf',
     function (gltf) {
+
+        const constantSize = 0.25;
+        const scaleRate = constantSize * screenMultiplier
+
         gltf.scene.traverse(function (child) {
             if ((<THREE.Mesh>child).isMesh) {
                 let m = <THREE.Mesh>child
                 m.receiveShadow = true
                 m.castShadow = true
                 m.material = materialPhysical
-                m.position.setZ(1.5)
+                m.position.setZ(1.25)
                 m.position.setY(0.6)
-                m.scale.set(0.6, 0.6, 0.6)
+                m.scale.set(scaleRate,scaleRate,scaleRate)
             }
         })
         scene.add(gltf.scene);
@@ -343,22 +346,22 @@ materialPhysical.envMap = envTexture
 
 // ============ GUI ============-
 
-const gui = new GUI()
+// const gui = new GUI()
 
-const customParameters = {
-    sFactor: 1
-}
+// const customParameters = {
+//     sFactor: 1
+// }
 
-const scaleAll = () => {
-    icoSphere.scale.set(customParameters.sFactor, customParameters.sFactor, customParameters.sFactor)
-}
+// const scaleAll = () => {
+//     icoSphere.scale.set(customParameters.sFactor, customParameters.sFactor, customParameters.sFactor)
+// }
 
-const icoFolder = gui.addFolder("Ico Transforms")
-icoFolder.add(icoSphere.position, "x", -10, 10)
-icoFolder.add(icoSphere.position, "y", -10, 10)
-icoFolder.add(icoSphere.position, "z", -10, 10)
-icoFolder.add(customParameters, "sFactor", 0.1, 2).onChange(scaleAll);
-icoFolder.open()
+// const icoFolder = gui.addFolder("Ico Transforms")
+// icoFolder.add(icoSphere.position, "x", -10, 10)
+// icoFolder.add(icoSphere.position, "y", -10, 10)
+// icoFolder.add(icoSphere.position, "z", -10, 10)
+// icoFolder.add(customParameters, "sFactor", 0.1, 2).onChange(scaleAll);
+// icoFolder.open()
 
 // const lightFolder = gui.addFolder("Light Properties")
 // lightFolder.add(mainSpotLight, "intensity", 0, 10)
@@ -373,7 +376,6 @@ const leftAlign = (object: THREE.Mesh) => {
 
     // console.log((((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) * -1 ))
     // console.log((((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) ))
-    console.log(icoSphere.position)
 }
 
 
@@ -410,8 +412,8 @@ const onWindowResize = () => {
 window.addEventListener('resize', onWindowResize, false)
 
 //====  STATS =====
-const stats = Stats()
-document.body.appendChild(stats.dom)
+// const stats = Stats()
+// document.body.appendChild(stats.dom)
 
 // ======== BEGIN ANIMATION LOOP
 
@@ -432,7 +434,7 @@ const animate = () => {
 
 
     render()
-    stats.update()
+    // stats.update()
 };
 
 const render = () => {
