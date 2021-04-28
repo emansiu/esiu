@@ -62,13 +62,14 @@ particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(posit
 particleGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 particleGeometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1).setUsage(THREE.DynamicDrawUsage));
 const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
-scene.add(particleSystem);
+// scene.add(particleSystem);
 const render = () => {
-    const elapsedTime = clock.elapsedTime * 0.5;
-    particleSystem.rotation.z = 0.01 * elapsedTime;
+    // const elapsedTime = clock.elapsedTime * 0.5;
+    // particleSystem.rotation.z = 0.01 * elapsedTime;
     const sizes = particleGeometry.attributes.size.array;
-    for (let i = 0; i < particleCount; i++) {
-        sizes[i] = 0.5 * (10.0 + Math.sin(0.8 * i + elapsedTime));
-    }
+    // YOU NEED THESE SO UNCOMMENT
+    // for ( let i = 0; i < particleCount; i ++ ) {
+    //     sizes[i] = 0.5 * ( 10.0 + Math.sin( 0.8 * i + elapsedTime ) );
+    // }
     particleGeometry.attributes.size.needsUpdate = true;
 };

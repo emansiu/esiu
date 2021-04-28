@@ -4,7 +4,6 @@ import { GLTFLoader } from '/jsm/loaders/GLTFLoader';
 import { EffectComposer } from '/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from '/jsm/postprocessing/UnrealBloomPass.js';
-// import { DragControls } from '/jsm/controls/DragControls'
 // SET UP SCENE
 const scene = new THREE.Scene();
 const sceneMeshes = new Array();
@@ -25,7 +24,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(width, height);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.setClearColor(new THREE.Color('#21282a'), 1);
+// renderer.setClearColor(new THREE.Color('#21282a'),1)
 canvasContainer.appendChild(renderer.domElement);
 var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, stencilBuffer: true };
 var renderTarget = new THREE.WebGLRenderTarget(width, height, parameters);
@@ -42,14 +41,6 @@ const bloom = {
 };
 const bloomPass = new UnrealBloomPass(composerResolution, bloom.strength, bloom.radius, bloom.threshold);
 composer.addPass(bloomPass);
-// ORBIT CONTROLS
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.minPolarAngle = Math.PI / 2.3;
-controls.maxPolarAngle = (Math.PI) - (Math.PI / 2.3);
-controls.minAzimuthAngle = -Math.PI / 20;
-controls.maxAzimuthAngle = Math.PI / 20;
-controls.enablePan = false;
-controls.enableZoom = false;
 // ====================================LIGHTS=================================================
 //-------------------------------------- MAIN SPOTLIGHT
 const mainSpotLight = new THREE.SpotLight(0xffffff, 0.7, 15, 0.4, 0.6, 1); //color, intensity, distance, angle, penumbra, decay
@@ -186,17 +177,21 @@ textLoader.load('fonts/helvetiker_regular.typeface.json', function (font) {
     textMesh.castShadow = true;
     textMesh.position.set(-0.19 * screenMultiplier, -0.8, 1);
     scene.add(textMesh);
+    sceneMeshes.push(textMesh);
 });
 //------- ADD ICOSAHEDRON
 // const icoRadius = 0.5
 let icoRadius;
+let screenMultiplier;
 if (landscape) {
     icoRadius = (((Math.tan((camera.fov / 2) * Math.PI / 180) * (camera.position.z - 1)) * (height / width)) * 1) / 2;
+    // screenMultiplier = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (height/width)) )
 }
 else {
     icoRadius = (((Math.tan((camera.fov / 2) * Math.PI / 180) * (camera.position.z - 1)) * (width / height)) * 1) / 2;
+    // screenMultiplier = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (width/height)) )
 }
-const screenMultiplier = (((Math.tan((camera.fov / 2) * Math.PI / 180) * (camera.position.z - 1)) * (width / height)));
+screenMultiplier = (((Math.tan((camera.fov / 2) * Math.PI / 180) * (camera.position.z - 1)) * (width / height)));
 console.log(screenMultiplier);
 const icoGeo = new THREE.IcosahedronGeometry(icoRadius, 1);
 const icoSphere = new THREE.Mesh(icoGeo, fractedMaterial);
@@ -212,7 +207,6 @@ backgroundPlane.receiveShadow = true;
 backgroundPlane.castShadow = true;
 // backgroundPlane.position.z = -1;
 scene.add(backgroundPlane);
-sceneMeshes.push(backgroundPlane);
 // ======== IMPORT OBJECTS =============
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('models/EmanuelSiu_Text_Curved.gltf', function (gltf) {
@@ -240,22 +234,79 @@ const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLiv
 envTexture.mapping = THREE.CubeReflectionMapping;
 // envTexture.mapping = THREE.CubeRefractionMapping
 materialPhysical.envMap = envTexture;
+// ================ CONTROLS =====================
+// --- ORBIT CONTROLS
+const orbitControls = new OrbitControls(camera, renderer.domElement);
+orbitControls.minPolarAngle = Math.PI / 2.3;
+orbitControls.maxPolarAngle = (Math.PI) - (Math.PI / 2.3);
+orbitControls.minAzimuthAngle = -Math.PI / 20;
+orbitControls.maxAzimuthAngle = Math.PI / 20;
+orbitControls.enablePan = false;
+orbitControls.enableZoom = false;
+// ----- DRAG CONTROLS
+// const dragControls = new DragControls([icoSphere], camera, renderer.domElement)
+// dragControls.addEventListener("hoveron", function () {
+//     orbitControls.enabled = false;
+// });
+// dragControls.addEventListener("hoveroff", function () {
+//     orbitControls.enabled = true;
+// });
+// dragControls.addEventListener('dragstart', function (event) {
+//     event.object.material.opacity = 0.33
+// })
+// dragControls.addEventListener('dragend', function (event) {
+//     event.object.material.opacity = 1
+//     alert('you did it')
+// })
 // ======== RAYCASTER ==========
-// renderer.domElement.addEventListener('mousemove', onMouseMove, false);
-// const raycaster = new THREE.Raycaster();
-// function onMouseMove(event: MouseEvent) {
-//     // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
-//     const mouse = {
-//         x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
-//         y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
-//     }
-//     raycaster.setFromCamera(mouse, camera);
-//     const intersects = raycaster.intersectObjects(sceneMeshes, false);
-//     if (intersects.length > 0) {
-//         const { x, y, z } = intersects[0].point
-//         mainSpotLight.target.position.set(x, y, z)
-//     }
-// }
+const raycaster = new THREE.Raycaster();
+const onPress = (event) => {
+    // this function is just for phone touches to circumvent orbitControls screwing it all up
+    console.log(event.touches[0]);
+    // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
+    const mouse = {
+        x: (event.touches[0].clientX / renderer.domElement.clientWidth) * 2 - 1,
+        y: -(event.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1
+    };
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(sceneMeshes, false);
+    if (intersects.length > 0) {
+        orbitControls.enabled = false;
+    }
+    else {
+        orbitControls.enabled = true;
+    }
+};
+const onRelease = (event) => {
+    console.log(event);
+    orbitControls.enabled = true;
+    // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
+    let mouse;
+    if (event.touches) {
+        console.log('we are touching');
+        mouse = {
+            x: (event.changedTouches[0].clientX / renderer.domElement.clientWidth) * 2 - 1,
+            y: -(event.changedTouches[0].clientY / renderer.domElement.clientHeight) * 2 + 1
+        };
+    }
+    else {
+        console.log('we are on computer');
+        mouse = {
+            x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+            y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+        };
+    }
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(sceneMeshes, false);
+    if (intersects.length > 0) {
+        if (intersects[0].object.geometry.type == 'TextGeometry') {
+            alert('success!!!!');
+        }
+    }
+};
+renderer.domElement.addEventListener('touchstart', onPress, false);
+renderer.domElement.addEventListener('click', onRelease, false);
+renderer.domElement.addEventListener('touchend', onRelease, false);
 // ============ GUI ============-
 // const gui = new GUI()
 // const customParameters = {

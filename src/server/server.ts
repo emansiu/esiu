@@ -29,6 +29,8 @@ class App {
         app.use('/jsm/shaders/LuminosityHighPassShader.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js')))
         // fonts to serve
         app.use('/fonts/helvetiker_regular.typeface.json', express.static(path.join(__dirname, '../../node_modules/three/examples/fonts/helvetiker_regular.typeface.json')))
+        // drag controls
+        app.use('/jsm/controls/DragControls', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/controls/DragControls.js')))
         this.server = new http.Server(app);
     }
 
