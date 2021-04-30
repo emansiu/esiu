@@ -60,6 +60,7 @@ const bloom = {
     radius: 1.0,
     threshold: 0.75
 }
+
 const bloomPass = new UnrealBloomPass( composerResolution, bloom.strength, bloom.radius, bloom.threshold)
 composer.addPass(bloomPass);
 
@@ -321,6 +322,7 @@ orbitControls.minAzimuthAngle = - Math.PI /20
 orbitControls.maxAzimuthAngle = Math.PI /20
 orbitControls.enablePan = false;
 orbitControls.enableZoom = false;
+orbitControls.target.set(0,0,1)
 
 // ----- DRAG CONTROLS
 // const dragControls = new DragControls([icoSphere], camera, renderer.domElement)
@@ -398,7 +400,7 @@ const onRelease = (event: any) => {
 }
 
 
-renderer.domElement.addEventListener('touchstart', onPress, false);
+// renderer.domElement.addEventListener('touchstart', onPress, false);
 renderer.domElement.addEventListener('click', onRelease, false);
 renderer.domElement.addEventListener('touchend', onRelease, false);
 
@@ -431,39 +433,29 @@ renderer.domElement.addEventListener('touchend', onRelease, false);
 // lightFolder.add(mainSpotLight, "intensity", 0, 10)
 // lightFolder.open()
 
-const leftAlign = (object: THREE.Mesh) => {
-    let w = canvasContainer.clientWidth
-    let h = canvasContainer.clientHeight
-    let desiredRatio = w / h
-    let leftAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - object.position.z)) *desiredRatio) * -1 )
-    object.position.setX(leftAlign)
+const alignmentsForObject = (object: THREE.Mesh) => {
+    const w = canvasContainer.clientWidth
+    const h = canvasContainer.clientHeight
+    const desiredRatio = w / h
+    const rightAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - object.position.z)) * desiredRatio) );
+    const leftAlign = rightAlign * -1;
+    const topAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - object.position.z))));
+    const bottomAlign = topAlign * -1;
 
-    // console.log((((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) * -1 ))
-    // console.log((((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) ))
+    return {
+        top:topAlign, 
+        right:rightAlign, 
+        bottom:bottomAlign, 
+        left:leftAlign
+    }
 }
 
 
 
 const onWindowResize = () => {
 
-    // FOV FOR US IS 40
-    const paddingSpace = 0.1
-
-    // let w = canvasContainer.clientWidth
-    // let h = canvasContainer.clientHeight
-
-    // let desiredRatio = w / h
-
-
-    // formula for left align below
-    // let leftAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * camera.position.z) *desiredRatio) * -1 ) + ((1 * icoSphere.scale.x) + paddingSpace)
-    // icoSphere.position.setX(leftAlign);
-
-    // formula for left align below
-    // let leftAlign = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - textMesh.position.z)) *desiredRatio) * -1 )
-    // textMesh.position.setX(leftAlign);
-    // leftAlign(textMesh);
-    leftAlign(icoSphere);
+    console.log(alignmentsForObject(icoSphere))
+    icoSphere.position.setY( alignmentsForObject(icoSphere).top )
 
 
     landscape = canvasContainer.clientHeight < canvasContainer.clientWidth ? true : false
@@ -474,6 +466,8 @@ const onWindowResize = () => {
 }
 
 window.addEventListener('resize', onWindowResize, false)
+
+
 
 //====  STATS =====
 // const stats = Stats()
