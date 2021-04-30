@@ -277,13 +277,11 @@ scene.add(backgroundPlane)
 // ======== IMPORT OBJECTS =============
 const gltfLoader = new GLTFLoader()
 let EmanuelSiu:THREE.Mesh
-let originalScale: number;
 gltfLoader.load(
     'models/EmanuelSiu_Text_Curved.gltf',
     function (gltf) {
 
-        // const constantSize = 0.25;
-        // const scaleRate = constantSize * screenMultiplier
+        
 
         gltf.scene.traverse(function (child) {
             if ((<THREE.Mesh>child).isMesh) {
@@ -293,10 +291,7 @@ gltfLoader.load(
                 EmanuelSiu.material = materialPhysical
                 EmanuelSiu.position.setZ(1.25)
                 EmanuelSiu.position.setY(0.6)
-                // EmanuelSiu.scale.set(scaleRate,scaleRate,scaleRate)
-                originalScale = EmanuelSiu.scale.x
-                console.log(`original scale = ${originalScale}`)
-                EmanuelSiu.scale.set( originalScale* screenMultiplier, originalScale* screenMultiplier, originalScale* screenMultiplier)
+                EmanuelSiu.scale.set( screenMultiplier, screenMultiplier, screenMultiplier)
             }
         })
         scene.add(gltf.scene);
@@ -451,7 +446,7 @@ const onWindowResize = () => {
     }
 
     icoSphere.scale.set(screenMultiplier,screenMultiplier,screenMultiplier)
-    EmanuelSiu.scale.set(originalScale * screenMultiplier, originalScale*screenMultiplier, originalScale* screenMultiplier)
+    EmanuelSiu.scale.set( screenMultiplier, screenMultiplier, screenMultiplier)
 
 
     landscape = canvasContainer.clientHeight < canvasContainer.clientWidth ? true : false
