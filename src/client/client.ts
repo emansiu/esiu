@@ -104,7 +104,7 @@ shadowMaterial.opacity = 0.5;
 
 const materialPhysical: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 1.0, roughness: 0.1, metalness: 0.8, color: 0xffffff });
 
-const backgroundMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map:bgTexture, displacementMap:bgTexture, displacementScale:2});
+const backgroundMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map:bgTexture, displacementMap:bgTexture, displacementScale:0});
 
 
 // CUSTOM FRACTED SHADER/MATERIAL
@@ -214,20 +214,21 @@ textLoader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
 
 	const textGeo = new THREE.TextGeometry( 'About', {
 		font: font,
-		size: 0.10 * screenMultiplier,
+		size: 0.2 * screenMultiplier,
 		height: 0.05,
 		curveSegments: 16,
 		bevelEnabled: true,
 		bevelThickness: .01,
 		bevelSize: 0.006,
 		bevelOffset: 0,
-		bevelSegments: 4
+		bevelSegments: 4,
 	} );
 
-    
     textMesh = new THREE.Mesh(textGeo, materialPhysical)
     textMesh.castShadow = true;
-    textMesh.position.set(-0.19 * screenMultiplier,-0.8,1)
+    textMesh.position.set(0,-0.8,1)
+    textMesh.geometry.center();
+
     scene.add(textMesh)
     sceneMeshes.push(textMesh)
 
@@ -249,10 +250,11 @@ if (landscape){
     // screenMultiplier = (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (width/height)) )
 }
 
-screenMultiplier =  (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (width/height)) )
-console.log(screenMultiplier)
+// screenMultiplier =  (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (width/height)) )
+screenMultiplier =  width/height > 1 ? 1 : width/height
 
-const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(icoRadius, 1)
+
+const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(0.5 * screenMultiplier, 1)
 
 const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, fractedMaterial)
 icoSphere.position.set(0, 0, 1)
@@ -274,28 +276,33 @@ scene.add(backgroundPlane)
 
 // ======== IMPORT OBJECTS =============
 const gltfLoader = new GLTFLoader()
+let EmanuelSiu:THREE.Mesh
+let originalScale: number;
 gltfLoader.load(
     'models/EmanuelSiu_Text_Curved.gltf',
     function (gltf) {
 
-        const constantSize = 0.25;
-        const scaleRate = constantSize * screenMultiplier
+        // const constantSize = 0.25;
+        // const scaleRate = constantSize * screenMultiplier
 
         gltf.scene.traverse(function (child) {
             if ((<THREE.Mesh>child).isMesh) {
-                let m = <THREE.Mesh>child
-                m.receiveShadow = true
-                m.castShadow = true
-                m.material = materialPhysical
-                m.position.setZ(1.25)
-                m.position.setY(0.6)
-                m.scale.set(scaleRate,scaleRate,scaleRate)
+                EmanuelSiu = <THREE.Mesh>child
+                EmanuelSiu.receiveShadow = true
+                EmanuelSiu.castShadow = true
+                EmanuelSiu.material = materialPhysical
+                EmanuelSiu.position.setZ(1.25)
+                EmanuelSiu.position.setY(0.6)
+                // EmanuelSiu.scale.set(scaleRate,scaleRate,scaleRate)
+                originalScale = EmanuelSiu.scale.x
+                console.log(`original scale = ${originalScale}`)
+                EmanuelSiu.scale.set( originalScale* screenMultiplier, originalScale* screenMultiplier, originalScale* screenMultiplier)
             }
         })
         scene.add(gltf.scene);
     },
     (xhr) => {
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+        // console.log((xhr.loaded / xhr.total * 100) + '% loaded')
     },
     (error) => {
         console.log(error);
@@ -318,8 +325,8 @@ materialPhysical.envMap = envTexture
 const orbitControls = new OrbitControls(camera, renderer.domElement)
 orbitControls.minPolarAngle = Math.PI/2.3;
 orbitControls.maxPolarAngle = (Math.PI) - (Math.PI/2.3);
-orbitControls.minAzimuthAngle = - Math.PI /20
-orbitControls.maxAzimuthAngle = Math.PI /20
+orbitControls.minAzimuthAngle = - Math.PI /10
+orbitControls.maxAzimuthAngle = Math.PI /10
 orbitControls.enablePan = false;
 orbitControls.enableZoom = false;
 orbitControls.target.set(0,0,1)
@@ -347,30 +354,11 @@ orbitControls.target.set(0,0,1)
 
 const raycaster = new THREE.Raycaster();
 
-const onPress = (event: any) =>{
-    // this function is just for phone touches to circumvent orbitControls screwing it all up
-    console.log(event.touches[0])
-    // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
-    const mouse = {
-        x: (event.touches[0].clientX / renderer.domElement.clientWidth) * 2 - 1,
-        y: -(event.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1
-    }
-
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(sceneMeshes, false);
-
-    if(intersects.length > 0 ){
-        orbitControls.enabled = false;
-    } else {
-        orbitControls.enabled = true;
-    }
-}
 
 const onRelease = (event: any) => {
     
-    console.log(event)
     orbitControls.enabled = true;
+
     // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
     let mouse: any
     if (event.touches){
@@ -399,13 +387,8 @@ const onRelease = (event: any) => {
     }
 }
 
-
-// renderer.domElement.addEventListener('touchstart', onPress, false);
 renderer.domElement.addEventListener('click', onRelease, false);
 renderer.domElement.addEventListener('touchend', onRelease, false);
-
-
-
 
 
 
@@ -454,11 +437,25 @@ const alignmentsForObject = (object: THREE.Mesh) => {
 
 const onWindowResize = () => {
 
-    console.log(alignmentsForObject(icoSphere))
-    icoSphere.position.setY( alignmentsForObject(icoSphere).top )
+    // icoSphere.position.setX( alignmentsForObject(icoSphere).right )
+    // console.log(screenMultiplier)
+
+    const h: number = canvasContainer.clientHeight;
+    const w: number = canvasContainer.clientWidth;
+    console.log(`aspect ratio: ${w/h}`)
+    if (w/h < 1.0){
+        const cgWidth =  Math.abs((((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (w/h)) ))
+        console.log(cgWidth)
+        screenMultiplier =  w/h
+        // console.log(screenMultiplier)
+    }
+
+    icoSphere.scale.set(screenMultiplier,screenMultiplier,screenMultiplier)
+    EmanuelSiu.scale.set(originalScale * screenMultiplier, originalScale*screenMultiplier, originalScale* screenMultiplier)
 
 
     landscape = canvasContainer.clientHeight < canvasContainer.clientWidth ? true : false
+
     camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight
     camera.updateProjectionMatrix()
     renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight)
