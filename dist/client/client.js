@@ -4,6 +4,22 @@ import { GLTFLoader } from '/jsm/loaders/GLTFLoader';
 import { EffectComposer } from '/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from '/jsm/postprocessing/UnrealBloomPass.js';
+// ========================= HELPER FUNCTIONS =================================
+const alignmentsForObject = (object, currentCamera) => {
+    const w = canvasContainer.clientWidth;
+    const h = canvasContainer.clientHeight;
+    const desiredRatio = w / h;
+    const rightAlign = (((Math.tan((currentCamera.fov / 2) * Math.PI / 180) * (currentCamera.position.z - object.position.z)) * desiredRatio));
+    const leftAlign = rightAlign * -1;
+    const topAlign = (((Math.tan((currentCamera.fov / 2) * Math.PI / 180) * (currentCamera.position.z - object.position.z))));
+    const bottomAlign = topAlign * -1;
+    return {
+        top: topAlign,
+        right: rightAlign,
+        bottom: bottomAlign,
+        left: leftAlign
+    };
+};
 // SET UP SCENE
 const scene = new THREE.Scene();
 const sceneMeshes = new Array();
@@ -176,6 +192,11 @@ textLoader.load('fonts/helvetiker_regular.typeface.json', function (font) {
     textMesh = new THREE.Mesh(textGeo, materialPhysical);
     textMesh.castShadow = true;
     textMesh.position.set(0, -0.8, 1);
+    //object.geometry.center();
+    // var box = new THREE.Box3().setFromObject( textMesh )
+    // var boundingBoxSize = box.max.sub( box.min );
+    // var height = boundingBoxSize.y;
+    // textMesh.position.y = - height / 2;
     textMesh.geometry.center();
     scene.add(textMesh);
     sceneMeshes.push(textMesh);
@@ -210,6 +231,7 @@ backgroundPlane.castShadow = true;
 scene.add(backgroundPlane);
 // ======== IMPORT OBJECTS =============
 const gltfLoader = new GLTFLoader();
+//---------- MY NAME
 let EmanuelSiu;
 gltfLoader.load('models/EmanuelSiu_Text_Curved.gltf', function (gltf) {
     gltf.scene.traverse(function (child) {
@@ -221,6 +243,33 @@ gltfLoader.load('models/EmanuelSiu_Text_Curved.gltf', function (gltf) {
             EmanuelSiu.position.setZ(1.25);
             EmanuelSiu.position.setY(0.6);
             EmanuelSiu.scale.set(screenMultiplier, screenMultiplier, screenMultiplier);
+        }
+    });
+    scene.add(gltf.scene);
+}, (xhr) => {
+    // console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+}, (error) => {
+    console.log(error);
+});
+// ------------------ INPUT SHAPE
+let inputShape;
+gltfLoader.load('models/ShapeInput.glb', function (gltf) {
+    gltf.scene.traverse(function (child) {
+        if (child.isMesh) {
+            inputShape = child;
+            inputShape.receiveShadow = true;
+            inputShape.castShadow = true;
+            inputShape.material = materialPhysical;
+            inputShape.scale.set(screenMultiplier, screenMultiplier, screenMultiplier);
+            //object.geometry.center();
+            var box = new THREE.Box3().setFromObject(inputShape);
+            var boundingBoxSize = box.max.sub(box.min);
+            // var height = boundingBoxSize.y;
+            // inputShape.position.y = - height / 2;
+            inputShape.position.set(alignmentsForObject(icoSphere, camera).left + (boundingBoxSize.x / 1.3), alignmentsForObject(icoSphere, camera).bottom + (boundingBoxSize.y / 1.3), 1);
+            // inputShape.position.setX(alignmentsForObject(icoSphere,camera).left)
+            // inputShape.position.setY(alignmentsForObject(icoSphere,camera).bottom)
+            // inputShape.position.setZ(1)
         }
     });
     scene.add(gltf.scene);
@@ -244,21 +293,6 @@ orbitControls.maxAzimuthAngle = Math.PI / 10;
 orbitControls.enablePan = false;
 orbitControls.enableZoom = false;
 orbitControls.target.set(0, 0, 1);
-// ----- DRAG CONTROLS
-// const dragControls = new DragControls([icoSphere], camera, renderer.domElement)
-// dragControls.addEventListener("hoveron", function () {
-//     orbitControls.enabled = false;
-// });
-// dragControls.addEventListener("hoveroff", function () {
-//     orbitControls.enabled = true;
-// });
-// dragControls.addEventListener('dragstart', function (event) {
-//     event.object.material.opacity = 0.33
-// })
-// dragControls.addEventListener('dragend', function (event) {
-//     event.object.material.opacity = 1
-//     alert('you did it')
-// })
 // ======== RAYCASTER ==========
 const raycaster = new THREE.Raycaster();
 const onRelease = (event) => {
@@ -306,27 +340,11 @@ renderer.domElement.addEventListener('touchend', onRelease, false);
 // const lightFolder = gui.addFolder("Light Properties")
 // lightFolder.add(mainSpotLight, "intensity", 0, 10)
 // lightFolder.open()
-const alignmentsForObject = (object) => {
-    const w = canvasContainer.clientWidth;
-    const h = canvasContainer.clientHeight;
-    const desiredRatio = w / h;
-    const rightAlign = (((Math.tan((camera.fov / 2) * Math.PI / 180) * (camera.position.z - object.position.z)) * desiredRatio));
-    const leftAlign = rightAlign * -1;
-    const topAlign = (((Math.tan((camera.fov / 2) * Math.PI / 180) * (camera.position.z - object.position.z))));
-    const bottomAlign = topAlign * -1;
-    return {
-        top: topAlign,
-        right: rightAlign,
-        bottom: bottomAlign,
-        left: leftAlign
-    };
-};
 const onWindowResize = () => {
     // icoSphere.position.setX( alignmentsForObject(icoSphere).right )
     // console.log(screenMultiplier)
     const h = canvasContainer.clientHeight;
     const w = canvasContainer.clientWidth;
-    console.log(`aspect ratio: ${w / h}`);
     if (w / h < 1.0) {
         const cgWidth = Math.abs((((Math.tan((camera.fov / 2) * Math.PI / 180) * (camera.position.z - 1)) * (w / h))));
         console.log(cgWidth);
@@ -335,6 +353,9 @@ const onWindowResize = () => {
     }
     icoSphere.scale.set(screenMultiplier, screenMultiplier, screenMultiplier);
     EmanuelSiu.scale.set(screenMultiplier, screenMultiplier, screenMultiplier);
+    icoSphere.position.setX(alignmentsForObject(icoSphere, camera).left);
+    // inputShape.position.setX(alignmentsForObject(icoSphere,camera).left);
+    // inputShape.position.setY(alignmentsForObject(icoSphere,camera).bottom);
     landscape = canvasContainer.clientHeight < canvasContainer.clientWidth ? true : false;
     camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
     camera.updateProjectionMatrix();
