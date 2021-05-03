@@ -8,7 +8,9 @@ import { RenderPass } from '/jsm/postprocessing/RenderPass.js'
 import {UnrealBloomPass} from '/jsm/postprocessing/UnrealBloomPass.js'
 import { text } from 'express'
 import { DragControls } from '/jsm/controls/DragControls'
-import { CANCELLED } from 'node:dns'
+// import { gsap } from 'gsap/dist/gsap'
+// const { gsap } = require("gsap/dist/gsap");
+
 
 
 // ========================= HELPER FUNCTIONS =================================
@@ -434,7 +436,28 @@ const onRelease = (event: any) => {
 
     if(intersects.length > 0 ){
         if (intersects[0].object.geometry.type == 'TextGeometry') {
-            alert('success!!!!')
+
+            // const menuAnimation = gsap.timeline()
+            // menuAnimation.to(icoSphere.position,{
+            //     x: inputShape.position.x, 
+            //     y:inputShape.position.y, 
+            //     duration:2,
+            //     ease:"power4.inOut"
+            // });
+            // menuAnimation.to(icoSphere.scale,{
+            //     x: 0.4, 
+            //     y:0.4,
+            //     z:0.4,
+            //     duration:2,
+            //     ease:"power4.inOut"
+            // }, 0);
+            // menuAnimation.fromTo(icoSphere.position,{
+            //     z:3,
+            //     duration:2,
+            //     ease:"power4.inOut"
+            // }, 0);
+            gsap.to(icoSphere.position, {x:2, duration:3})
+
         }
     }
 }
@@ -538,5 +561,6 @@ const render = () => {
 }
 
 animate();
+
 
 
