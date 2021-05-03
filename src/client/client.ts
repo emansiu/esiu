@@ -1,15 +1,15 @@
-import * as THREE from '/build/three.module.js'
-import { OrbitControls } from '/jsm/controls/OrbitControls'
-import Stats from '/jsm/libs/stats.module'
-import { GUI } from '/jsm/libs/dat.gui.module'
-import { GLTFLoader } from '/jsm/loaders/GLTFLoader'
-import { EffectComposer } from '/jsm/postprocessing/EffectComposer.js'
-import { RenderPass } from '/jsm/postprocessing/RenderPass.js'
-import {UnrealBloomPass} from '/jsm/postprocessing/UnrealBloomPass.js'
-import { text } from 'express'
-import { DragControls } from '/jsm/controls/DragControls'
-// import { gsap } from 'gsap/dist/gsap'
-// const { gsap } = require("gsap/dist/gsap");
+import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import Stats from 'three/examples/jsm/libs/stats.module'
+import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { DragControls } from 'three/examples/jsm/controls/DragControls'
+import {gsap} from 'gsap';
+// IMPORT FONTS WE WANT TO USE
+import HelvetikerFont from 'three/examples/fonts/helvetiker_regular.typeface.json'; 
 
 
 
@@ -227,43 +227,6 @@ fractedMaterial.extensions.derivatives = true;
 //     }
 // }
 
-//---------- CREATE SOME TEXT
-const textLoader = new THREE.FontLoader();
-let textMesh:any;
-textLoader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
-
-	const textGeo = new THREE.TextGeometry( 'About', {
-		font: font,
-		size: 0.2 * screenMultiplier,
-		height: 0.05,
-		curveSegments: 16,
-		bevelEnabled: true,
-		bevelThickness: .01,
-		bevelSize: 0.006,
-		bevelOffset: 0,
-		bevelSegments: 4,
-	} );
-
-    textMesh = new THREE.Mesh(textGeo, materialPhysical)
-    textMesh.castShadow = true;
-    textMesh.position.set(0,-0.8,1)
-
-    //object.geometry.center();
-    // var box = new THREE.Box3().setFromObject( textMesh )
-    // var boundingBoxSize = box.max.sub( box.min );
-    
-    // var height = boundingBoxSize.y;
-    // textMesh.position.y = - height / 2;
-
-    textMesh.geometry.center();
-
-    scene.add(textMesh)
-    sceneMeshes.push(textMesh)
-
-} );
-
-
-
 
 //------- ADD ICOSAHEDRON
 // const icoRadius = 0.5
@@ -289,6 +252,37 @@ icoSphere.position.set(0, 0, 1)
 icoSphere.castShadow = true;
 icoSphere.receiveShadow = true;
 scene.add(icoSphere)
+
+
+//---------- CREATE SOME TEXT
+
+// const textGeo = new THREE.TextGeometry( 'About', {
+//     font: HelvetikerFont,
+//     size: 0.2 * screenMultiplier,
+//     height: 0.05,
+//     curveSegments: 16,
+//     bevelEnabled: true,
+//     bevelThickness: .01,
+//     bevelSize: 0.006,
+//     bevelOffset: 0,
+//     bevelSegments: 4,
+// } );
+
+// const textMesh = new THREE.Mesh(textGeo, materialPhysical)
+// textMesh.castShadow = true;
+// textMesh.position.set(0,-0.8,1)
+
+// //object.geometry.center();
+// // var box = new THREE.Box3().setFromObject( textMesh )
+// // var boundingBoxSize = box.max.sub( box.min );
+
+// // var height = boundingBoxSize.y;
+// // textMesh.position.y = - height / 2;
+
+// textMesh.geometry.center();
+
+// scene.add(textMesh)
+// sceneMeshes.push(textMesh)
 
 
 
@@ -435,30 +429,25 @@ const onRelease = (event: any) => {
     const intersects = raycaster.intersectObjects(sceneMeshes, false);
 
     if(intersects.length > 0 ){
-        if (intersects[0].object.geometry.type == 'TextGeometry') {
+        console.log(intersects[0].object)
+        // if (intersects[0].object.geometry.type == 'TextGeometry') {
 
-            // const menuAnimation = gsap.timeline()
-            // menuAnimation.to(icoSphere.position,{
-            //     x: inputShape.position.x, 
-            //     y:inputShape.position.y, 
-            //     duration:2,
-            //     ease:"power4.inOut"
-            // });
-            // menuAnimation.to(icoSphere.scale,{
-            //     x: 0.4, 
-            //     y:0.4,
-            //     z:0.4,
-            //     duration:2,
-            //     ease:"power4.inOut"
-            // }, 0);
-            // menuAnimation.fromTo(icoSphere.position,{
-            //     z:3,
-            //     duration:2,
-            //     ease:"power4.inOut"
-            // }, 0);
-            gsap.to(icoSphere.position, {x:2, duration:3})
+        //     const menuAnimation = gsap.timeline()
+        //     menuAnimation.to(icoSphere.position,{
+        //         x: inputShape.position.x, 
+        //         y:inputShape.position.y, 
+        //         duration:2,
+        //         ease:"power4.inOut"
+        //     });
+        //     menuAnimation.to(icoSphere.scale,{
+        //         x: 0.4, 
+        //         y:0.4,
+        //         z:0.4,
+        //         duration:2,
+        //         ease:"power4.inOut"
+        //     }, 0);
 
-        }
+        // }
     }
 }
 
@@ -505,7 +494,6 @@ const onWindowResize = () => {
 
     if (w/h < 1.0){
         const cgWidth =  Math.abs((((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (w/h)) ))
-        console.log(cgWidth)
         screenMultiplier =  w/h
         // console.log(screenMultiplier)
     }
