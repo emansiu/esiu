@@ -125,7 +125,7 @@ shadowMaterial.opacity = 0.5;
 const materialPhysical: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 1.0, roughness: 0.1, metalness: 0.8, color: 0xffffff });
 
 const backgroundMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map:bgTexture, displacementMap:bgTexture, displacementScale:0});
-
+const breadcrumbMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({color:0x999999})
 
 // CUSTOM FRACTED SHADER/MATERIAL
 const uniforms = THREE.UniformsUtils.merge([
@@ -270,6 +270,7 @@ const textGeo = new THREE.TextGeometry( 'About', {
 
 const textMesh = new THREE.Mesh(textGeo, materialPhysical)
 textMesh.castShadow = true;
+textMesh.name = "AboutButton"
 textMesh.position.set(0,-0.8,1)
 
 //object.geometry.center();
@@ -338,7 +339,7 @@ gltfLoader.load(
                 inputShape = <THREE.Mesh>child
                 inputShape.receiveShadow = true
                 inputShape.castShadow = true
-                inputShape.material = materialPhysical
+                inputShape.material = breadcrumbMaterial
                 inputShape.scale.set( screenMultiplier, screenMultiplier, screenMultiplier)
 
                 //object.geometry.center();
@@ -430,24 +431,32 @@ const onRelease = (event: any) => {
 
     if(intersects.length > 0 ){
         console.log(intersects[0].object)
-        // if (intersects[0].object.geometry.type == 'TextGeometry') {
+        if (intersects[0].object.name === "AboutButton") {
 
-        //     const menuAnimation = gsap.timeline()
-        //     menuAnimation.to(icoSphere.position,{
-        //         x: inputShape.position.x, 
-        //         y:inputShape.position.y, 
-        //         duration:2,
-        //         ease:"power4.inOut"
-        //     });
-        //     menuAnimation.to(icoSphere.scale,{
-        //         x: 0.4, 
-        //         y:0.4,
-        //         z:0.4,
-        //         duration:2,
-        //         ease:"power4.inOut"
-        //     }, 0);
+            const menuAnimation = gsap.timeline()
+            // menuAnimation.to(icoSphere.position,{
+            //     x: inputShape.position.x /2 , 
+            //     y:inputShape.position.y /2,
+            //     z:inputShape.position.z + 1.0,
+            //     duration:1,
+            //     ease:"power1.out"
+            // });
+            menuAnimation.to(icoSphere.position,{
+                x: inputShape.position.x , 
+                y:inputShape.position.y,
+                z: inputShape.position.z + 0.1,
+                duration:1,
+                ease:"power1.in"
+            });
+            menuAnimation.to(icoSphere.scale,{
+                x: 0.30, 
+                y:0.30,
+                z:0.30,
+                duration:2,
+                ease:"power4.out"
+            }, 0);
 
-        // }
+        }
     }
 }
 
