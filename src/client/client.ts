@@ -256,33 +256,33 @@ scene.add(icoSphere)
 
 //---------- CREATE SOME TEXT
 
-// const textGeo = new THREE.TextGeometry( 'About', {
-//     font: HelvetikerFont,
-//     size: 0.2 * screenMultiplier,
-//     height: 0.05,
-//     curveSegments: 16,
-//     bevelEnabled: true,
-//     bevelThickness: .01,
-//     bevelSize: 0.006,
-//     bevelOffset: 0,
-//     bevelSegments: 4,
-// } );
+const textGeo = new THREE.TextGeometry( 'About', {
+    font: new THREE.Font( HelvetikerFont ),
+    size: 0.2 * screenMultiplier,
+    height: 0.05,
+    curveSegments: 16,
+    bevelEnabled: true,
+    bevelThickness: .01,
+    bevelSize: 0.006,
+    bevelOffset: 0,
+    bevelSegments: 4,
+} );
 
-// const textMesh = new THREE.Mesh(textGeo, materialPhysical)
-// textMesh.castShadow = true;
-// textMesh.position.set(0,-0.8,1)
+const textMesh = new THREE.Mesh(textGeo, materialPhysical)
+textMesh.castShadow = true;
+textMesh.position.set(0,-0.8,1)
 
-// //object.geometry.center();
-// // var box = new THREE.Box3().setFromObject( textMesh )
-// // var boundingBoxSize = box.max.sub( box.min );
+//object.geometry.center();
+// var box = new THREE.Box3().setFromObject( textMesh )
+// var boundingBoxSize = box.max.sub( box.min );
 
-// // var height = boundingBoxSize.y;
-// // textMesh.position.y = - height / 2;
+// var height = boundingBoxSize.y;
+// textMesh.position.y = - height / 2;
 
-// textMesh.geometry.center();
+textMesh.geometry.center();
 
-// scene.add(textMesh)
-// sceneMeshes.push(textMesh)
+scene.add(textMesh)
+sceneMeshes.push(textMesh)
 
 
 
