@@ -354,9 +354,6 @@ gltfLoader.load(
                     alignmentsForObject(icoSphere,camera).bottom + (boundingBoxSize.y /1.3),
                     1
                     )
-                    // inputShape.position.setX(alignmentsForObject(icoSphere,camera).left)
-                    // inputShape.position.setY(alignmentsForObject(icoSphere,camera).bottom)
-                    // inputShape.position.setZ(1)
                     
                 
                 
@@ -393,9 +390,6 @@ orbitControls.maxAzimuthAngle = Math.PI /10
 orbitControls.enablePan = false;
 orbitControls.enableZoom = false;
 orbitControls.target.set(0,0,1)
-
-
-
 
 
 
@@ -465,34 +459,6 @@ renderer.domElement.addEventListener('touchend', onRelease, false);
 
 
 
-
-// ============ GUI ============-
-
-// const gui = new GUI()
-
-// const customParameters = {
-//     sFactor: 1
-// }
-
-// const scaleAll = () => {
-//     icoSphere.scale.set(customParameters.sFactor, customParameters.sFactor, customParameters.sFactor)
-// }
-
-// const icoFolder = gui.addFolder("Ico Transforms")
-// icoFolder.add(icoSphere.position, "x", -10, 10)
-// icoFolder.add(icoSphere.position, "y", -10, 10)
-// icoFolder.add(icoSphere.position, "z", -10, 10)
-// icoFolder.add(customParameters, "sFactor", 0.1, 2).onChange(scaleAll);
-// icoFolder.open()
-
-// const lightFolder = gui.addFolder("Light Properties")
-// lightFolder.add(mainSpotLight, "intensity", 0, 10)
-// lightFolder.open()
-
-
-
-
-
 const onWindowResize = () => {
 
     // icoSphere.position.setX( alignmentsForObject(icoSphere).right )
@@ -504,7 +470,6 @@ const onWindowResize = () => {
     if (w/h < 1.0){
         const cgWidth =  Math.abs((((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (w/h)) ))
         screenMultiplier =  w/h
-        // console.log(screenMultiplier)
     }
 
     icoSphere.scale.set(screenMultiplier,screenMultiplier,screenMultiplier)
