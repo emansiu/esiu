@@ -289,7 +289,7 @@ sceneMeshes.push(textMesh)
 
 
 // POTENTIAL BACKGROUND PLANE MESH
-const invisiblePlaneGeo: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(10, 5, 10, 10)
+const invisiblePlaneGeo: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(15, 10, 10, 10)
 const backgroundPlane: THREE.Mesh = new THREE.Mesh(invisiblePlaneGeo, backgroundMaterial)
 backgroundPlane.visible = true;
 backgroundPlane.receiveShadow = true
