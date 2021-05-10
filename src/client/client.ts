@@ -13,7 +13,7 @@ import {gsap} from 'gsap';
 // IMPORT FONTS WE WANT TO USE
 import HelvetikerFont from 'three/examples/fonts/helvetiker_regular.typeface.json'; 
 // IMPORT CUSTOM MATERIALS
-import {Material_01} from './EmanateShaders'
+import {Material_Fracted, Material_Static, Material_Electric, uniforms } from './EmanateShaders'
 
 console.log(HelvetikerFont)
 
@@ -124,6 +124,8 @@ scene.add(ambientLightFill);
 
 //============= MATERIALS ============
 
+
+
 const shadowMaterial = new THREE.ShadowMaterial();
 shadowMaterial.opacity = 0.5;
 
@@ -132,87 +134,8 @@ const materialPhysical: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMater
 const backgroundMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map:bgTexture, displacementMap:bgTexture, displacementScale:0});
 const breadcrumbMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({color:0x999999})
 
-// CUSTOM FRACTED SHADER/MATERIAL
-const uniforms = THREE.UniformsUtils.merge([
-    THREE.UniformsLib["lights"],
-    THREE.UniformsLib["common"]
-])
-
-uniforms.u_beachImage = { value: textureLoader.load("img/stock/beach.jpg") },
-uniforms.u_color = { value: new THREE.Color(0xa6e4fa) };
-// uniforms.u_light_position = { value: mainSpotLight.position.clone() };
-// uniforms.u_light_intensity = { value: mainSpotLight.intensity };
-uniforms.u_rim_color = { value: new THREE.Color(0xffffff) };
-uniforms.u_rim_strength = { value: 1.6 };
-uniforms.u_rim_width = { value: 0.6 };
-uniforms.u_time = { value: 1.0 },
-uniforms.u_radius = { value: 1.0 },
-uniforms.u_resolution = { value: new THREE.Vector2() }
-
-const vshader = `
-    
-    uniform float u_time;
-    uniform float u_radius;
-
-    varying vec3 vDistortNormal;
-    varying vec3 vNormal;
-    varying vec2 v_uv;
-    varying vec3 vPosition;
-
-    void main() {
 
 
-        v_uv = uv;
-        vDistortNormal = normalize(normalMatrix * normal);
-        vNormal = normal;
-        vPosition = position;
-        
-
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( vPosition, 1.0 );
-    }
-`
-const fshader = `
-    uniform mat4 modelMatrix;
-    
-    uniform vec3 u_light_position;
-    uniform sampler2D u_beachImage;
-
-    varying vec2 v_uv;
-    varying vec3 vDistortNormal;
-    varying vec3 vNormal;
-    varying vec3 vPosition;
-
-
-    void main()
-    {
-        vec3 X = dFdx(vDistortNormal);
-        vec3 Y = dFdy(vDistortNormal);
-        vec3 distortedNormal = normalize(cross(X,Y));
-
-        
-        float normalTwist = dot(distortedNormal, vec3(0.6));
-        vec4 beachImage = texture2D(u_beachImage, v_uv * normalTwist + 0.2 );
-
-        vec3 worldPosition = ( modelMatrix * vec4( vPosition, 1.0 )).xyz;
-
-
-        vec3 worldNormal = normalize( vec3( modelMatrix * vec4( vNormal, 0.0 ) ) );
-
-        vec3 lightVector = normalize( u_light_position - worldPosition );
-
-        float brightness = dot( worldNormal, lightVector );
-
-        gl_FragColor = vec4(beachImage.rgb, 0.8);
-    }
-`
-const fractedMaterial = new THREE.ShaderMaterial({
-    uniforms,
-    vertexShader: vshader,
-    fragmentShader: fshader,
-    lights: true,
-    transparent: true,
-});
-fractedMaterial.extensions.derivatives = true;
 
 // materialPhysical.onBeforeCompile = aha => console.log(aha.vertexShader, aha.fragmentShader)
 
@@ -249,22 +172,32 @@ if (landscape){
 // screenMultiplier =  (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (width/height)) )
 screenMultiplier =  width/height > 1 ? 1 : width/height
 
-
+// ICO BALL
 const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(0.5 * screenMultiplier, 1)
 
-const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, fractedMaterial)
+const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, Material_Fracted)
 icoSphere.position.set(0, 0, 1)
 icoSphere.castShadow = true;
 icoSphere.receiveShadow = true;
 scene.add(icoSphere)
 
+// STATIC BALL
 const ball: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,12,12)
 
-const ballMesh: THREE.Mesh = new THREE.Mesh(ball, Material_01)
-ballMesh.position.set(1,0 , 1)
+const ballMesh: THREE.Mesh = new THREE.Mesh(ball, Material_Static)
+ballMesh.position.set(1, 0 , 1)
 ballMesh.castShadow = true;
 ballMesh.receiveShadow = true;
 scene.add(ballMesh)
+
+// ELECTRIC BALL
+const electricBallGeo: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,16,16)
+
+const electricBallMesh: THREE.Mesh = new THREE.Mesh(electricBallGeo, Material_Electric)
+electricBallMesh.position.set(-1, 0 , 1)
+electricBallMesh.castShadow = true;
+electricBallMesh.receiveShadow = true;
+scene.add(electricBallMesh)
 
 
 
@@ -541,6 +474,7 @@ const animate = () => {
     // helper.update() //LIGHT HELPER
 
     uniforms.u_time.value += clock.getDelta();
+    uniforms.u_timeDelta.value = clock.getDelta();
 
     icoSphere.rotateY(0.001);
     icoSphere.rotateZ(0.001);
