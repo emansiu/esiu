@@ -28,7 +28,8 @@ class App {
         // app.use('/jsm/postprocessing/UnrealBloomPass.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js')))
         // app.use('/jsm/shaders/LuminosityHighPassShader.js', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js')))
         // // fonts to serve
-        app.use('/fonts/helvetiker_regular.typeface.json', express.static(path.join(__dirname, '../../node_modules/three/examples/fonts/helvetiker_regular.typeface.json')))
+        // app.use('/fonts/helvetiker_regular.typeface.json', express.static(path.join(__dirname, '../../node_modules/three/examples/fonts/helvetiker_regular.typeface.json')))
+        // app.use('/fonts/xirod.ttf', express.static(path.join(__dirname, '../client/fonts/xirod.ttf')))
         // // drag controls
         // app.use('/jsm/controls/DragControls', express.static(path.join(__dirname, '../../node_modules/three/examples/jsm/controls/DragControls.js')))
         this.server = new http.Server(app);

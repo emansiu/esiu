@@ -3,14 +3,19 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { TTFLoader  } from 'three/examples/jsm/loaders/TTFLoader'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 import {gsap} from 'gsap';
 // IMPORT FONTS WE WANT TO USE
 import HelvetikerFont from 'three/examples/fonts/helvetiker_regular.typeface.json'; 
+// IMPORT CUSTOM MATERIALS
+import {Material_01} from './EmanateShaders'
 
+console.log(HelvetikerFont)
 
 
 // ========================= HELPER FUNCTIONS =================================
@@ -253,8 +258,48 @@ icoSphere.castShadow = true;
 icoSphere.receiveShadow = true;
 scene.add(icoSphere)
 
+const ball: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,12,12)
+
+const ballMesh: THREE.Mesh = new THREE.Mesh(ball, Material_01)
+ballMesh.position.set(1,0 , 1)
+ballMesh.castShadow = true;
+ballMesh.receiveShadow = true;
+scene.add(ballMesh)
+
+
 
 //---------- CREATE SOME TEXT
+
+const loader = new TTFLoader();
+loader.load('fonts/Azonix.ttf', (fnt) => {
+
+    const font = new THREE.Font(fnt)
+
+    const textGeo = new THREE.TextGeometry( 'Project History', {
+        font,
+        size: 0.2 * screenMultiplier,
+        height: 0.05,
+        curveSegments: 16,
+        bevelEnabled: true,
+        bevelThickness: .01,
+        bevelSize: 0.006,
+        bevelOffset: 0,
+        bevelSegments: 4,
+    } );
+    
+    const textMesh = new THREE.Mesh(textGeo, materialPhysical)
+    textMesh.castShadow = true;
+    textMesh.name = "ProjectHistory"
+    textMesh.position.set(0,0.8,1)
+    
+    
+    // textMesh.geometry.center();
+    
+    
+    scene.add(textMesh)
+    sceneMeshes.push(textMesh)
+
+})
 
 const textGeo = new THREE.TextGeometry( 'About', {
     font: new THREE.Font( HelvetikerFont ),
@@ -273,14 +318,9 @@ textMesh.castShadow = true;
 textMesh.name = "AboutButton"
 textMesh.position.set(0,-0.8,1)
 
-//object.geometry.center();
-// var box = new THREE.Box3().setFromObject( textMesh )
-// var boundingBoxSize = box.max.sub( box.min );
-
-// var height = boundingBoxSize.y;
-// textMesh.position.y = - height / 2;
 
 textMesh.geometry.center();
+
 
 scene.add(textMesh)
 sceneMeshes.push(textMesh)
@@ -300,33 +340,33 @@ scene.add(backgroundPlane)
 // ======== IMPORT OBJECTS =============
 const gltfLoader = new GLTFLoader()
 //---------- MY NAME
-let EmanuelSiu:THREE.Mesh
-gltfLoader.load(
-    'models/EmanuelSiu_Text_Curved.gltf',
-    function (gltf) {
+// let EmanuelSiu:THREE.Mesh
+// gltfLoader.load(
+//     'models/EmanuelSiu_Text_Curved.gltf',
+//     function (gltf) {
 
         
 
-        gltf.scene.traverse(function (child) {
-            if ((<THREE.Mesh>child).isMesh) {
-                EmanuelSiu = <THREE.Mesh>child
-                EmanuelSiu.receiveShadow = true
-                EmanuelSiu.castShadow = true
-                EmanuelSiu.material = materialPhysical
-                EmanuelSiu.position.setZ(1.25)
-                EmanuelSiu.position.setY(0.6)
-                EmanuelSiu.scale.set( screenMultiplier, screenMultiplier, screenMultiplier)
-            }
-        })
-        scene.add(gltf.scene);
-    },
-    (xhr) => {
-        // console.log((xhr.loaded / xhr.total * 100) + '% loaded')
-    },
-    (error) => {
-        console.log(error);
-    }
-);
+//         gltf.scene.traverse(function (child) {
+//             if ((<THREE.Mesh>child).isMesh) {
+//                 EmanuelSiu = <THREE.Mesh>child
+//                 EmanuelSiu.receiveShadow = true
+//                 EmanuelSiu.castShadow = true
+//                 EmanuelSiu.material = materialPhysical
+//                 EmanuelSiu.position.setZ(1.25)
+//                 EmanuelSiu.position.setY(0.6)
+//                 EmanuelSiu.scale.set( screenMultiplier, screenMultiplier, screenMultiplier)
+//             }
+//         })
+//         scene.add(gltf.scene);
+//     },
+//     (xhr) => {
+//         // console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+//     },
+//     (error) => {
+//         console.log(error);
+//     }
+// );
 
 // ------------------ INPUT SHAPE
 let inputShape: THREE.Mesh
@@ -383,12 +423,12 @@ materialPhysical.envMap = envTexture
 
 // --- ORBIT CONTROLS
 const orbitControls = new OrbitControls(camera, renderer.domElement)
-orbitControls.minPolarAngle = Math.PI/2.3;
-orbitControls.maxPolarAngle = (Math.PI) - (Math.PI/2.3);
-orbitControls.minAzimuthAngle = - Math.PI /10
-orbitControls.maxAzimuthAngle = Math.PI /10
-orbitControls.enablePan = false;
-orbitControls.enableZoom = false;
+// orbitControls.minPolarAngle = Math.PI/2.3;
+// orbitControls.maxPolarAngle = (Math.PI) - (Math.PI/2.3);
+// orbitControls.minAzimuthAngle = - Math.PI /10
+// orbitControls.maxAzimuthAngle = Math.PI /10
+// orbitControls.enablePan = false;
+// orbitControls.enableZoom = false;
 orbitControls.target.set(0,0,1)
 
 
@@ -405,14 +445,14 @@ const onRelease = (event: any) => {
     // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
     let mouse: any
     if (event.touches){
-        console.log('we are touching')
+        // Events in case of computer
         mouse = {
             x: (event.changedTouches[0].clientX / renderer.domElement.clientWidth) * 2 - 1,
             y: -(event.changedTouches[0].clientY / renderer.domElement.clientHeight) * 2 + 1
         }
-    
+        
     }else {
-        console.log('we are on computer')
+        // Events in case of phone
         mouse = {
             x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
             y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
@@ -424,31 +464,25 @@ const onRelease = (event: any) => {
     const intersects = raycaster.intersectObjects(sceneMeshes, false);
 
     if(intersects.length > 0 ){
-        console.log(intersects[0].object)
+        
         if (intersects[0].object.name === "AboutButton") {
 
             const menuAnimation = gsap.timeline()
-            // menuAnimation.to(icoSphere.position,{
-            //     x: inputShape.position.x /2 , 
-            //     y:inputShape.position.y /2,
-            //     z:inputShape.position.z + 1.0,
-            //     duration:1,
-            //     ease:"power1.out"
-            // });
+            
             menuAnimation.to(icoSphere.position,{
                 x: inputShape.position.x , 
                 y:inputShape.position.y,
                 z: inputShape.position.z + 0.1,
                 duration:1,
-                ease:"power1.in"
+                ease:"power3.in"
             });
             menuAnimation.to(icoSphere.scale,{
                 x: 0.30, 
                 y:0.30,
                 z:0.30,
-                duration:2,
-                ease:"power4.out"
-            }, 0);
+                duration:1.0,
+                ease:"power3.in"
+            },0);
 
         }
     }
@@ -472,10 +506,10 @@ const onWindowResize = () => {
         screenMultiplier =  w/h
     }
 
-    icoSphere.scale.set(screenMultiplier,screenMultiplier,screenMultiplier)
-    EmanuelSiu.scale.set( screenMultiplier, screenMultiplier, screenMultiplier)
+    // icoSphere.scale.set(screenMultiplier,screenMultiplier,screenMultiplier)
+    // EmanuelSiu.scale.set( screenMultiplier, screenMultiplier, screenMultiplier)
 
-    icoSphere.position.setX(alignmentsForObject(icoSphere,camera).left);
+    // icoSphere.position.setX(alignmentsForObject(icoSphere,camera).right);
     // inputShape.position.setX(alignmentsForObject(icoSphere,camera).left);
     // inputShape.position.setY(alignmentsForObject(icoSphere,camera).bottom);
 
@@ -493,8 +527,8 @@ window.addEventListener('resize', onWindowResize, false)
 
 
 //====  STATS =====
-// const stats = Stats()
-// document.body.appendChild(stats.dom)
+const stats = Stats()
+document.body.appendChild(stats.dom)
 
 // ======== BEGIN ANIMATION LOOP
 
@@ -510,12 +544,11 @@ const animate = () => {
 
     icoSphere.rotateY(0.001);
     icoSphere.rotateZ(0.001);
-    // icoSphere.position.y = Math.sin(clock.elapsedTime)/18;
     // mainSpotLight.updateWorldMatrix
 
 
     render()
-    // stats.update()
+    stats.update()
 };
 
 const render = () => {

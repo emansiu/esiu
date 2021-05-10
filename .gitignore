@@ -106,3 +106,6 @@ typings/
 # ignore large working files
 *.psd
 *.blend
+
+# ignore reference and working files
+references/
