@@ -13,7 +13,7 @@ import {gsap} from 'gsap';
 // IMPORT FONTS WE WANT TO USE
 import HelvetikerFont from 'three/examples/fonts/helvetiker_regular.typeface.json'; 
 // IMPORT CUSTOM MATERIALS
-import {Material_Fracted, Material_Static, Material_Electric, uniforms } from './EmanateShaders'
+import {Material_Fracted, Material_Static, Material_Circuit, Material_Electric, uniforms } from './EmanateShaders'
 
 console.log(HelvetikerFont)
 
@@ -175,7 +175,7 @@ screenMultiplier =  width/height > 1 ? 1 : width/height
 // ICO BALL
 const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(0.5 * screenMultiplier, 1)
 
-const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, Material_Fracted)
+const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, Material_Electric)
 icoSphere.position.set(0, 0, 1)
 icoSphere.castShadow = true;
 icoSphere.receiveShadow = true;
@@ -184,7 +184,7 @@ scene.add(icoSphere)
 // STATIC BALL
 const ball: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,12,12)
 
-const ballMesh: THREE.Mesh = new THREE.Mesh(ball, Material_Static)
+const ballMesh: THREE.Mesh = new THREE.Mesh(ball, Material_Electric)
 ballMesh.position.set(1, 0 , 1)
 ballMesh.castShadow = true;
 ballMesh.receiveShadow = true;
@@ -193,7 +193,7 @@ scene.add(ballMesh)
 // ELECTRIC BALL
 const electricBallGeo: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,16,16)
 
-const electricBallMesh: THREE.Mesh = new THREE.Mesh(electricBallGeo, Material_Electric)
+const electricBallMesh: THREE.Mesh = new THREE.Mesh(electricBallGeo, Material_Circuit)
 electricBallMesh.position.set(-1, 0 , 1)
 electricBallMesh.castShadow = true;
 electricBallMesh.receiveShadow = true;

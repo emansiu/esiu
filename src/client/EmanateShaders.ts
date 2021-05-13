@@ -4,6 +4,7 @@ import * as THREE from 'three'
 const textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
 const beachTexture = textureLoader.load("img/stock/beach.jpg")
 const electricBoardTexture = textureLoader.load("img/electric_texture.png")
+const chromaticNoise = textureLoader.load("img/chromatic_noise.png")
 
 
 //============= MATERIALS ============
@@ -15,6 +16,7 @@ const uniforms = THREE.UniformsUtils.merge([
 
 uniforms.u_beachImage = { value: beachTexture },
 uniforms.u_electricImage = { value: electricBoardTexture },
+uniforms.u_chromaticNoise = { value: chromaticNoise },
 uniforms.u_color = { value: new THREE.Color(0xa6e4fa) };
 // uniforms.u_light_position = { value: mainSpotLight.position.clone() };
 // uniforms.u_light_intensity = { value: mainSpotLight.intensity };
@@ -24,7 +26,9 @@ uniforms.u_rim_width = { value: 0.6 };
 uniforms.u_time = { value: 1.0 },
 uniforms.u_timeDelta = { value: 0.1 },
 uniforms.u_radius = { value: 1.0 },
-uniforms.u_resolution = { value: new THREE.Vector2() }
+uniforms.u_resolution = { value: new THREE.Vector2(2,2) }
+
+
 
 
 // ================ STATIC MATERIAL ====================
@@ -132,43 +136,181 @@ const Material_Fracted = new THREE.ShaderMaterial({
 Material_Fracted.extensions.derivatives = true;
 
 // =========== ELECTRIC / CHIP MATERIAL =============
-const vshader_electric = `
+
+// CIRCUIT
+const vshader_circuit = `
     
     uniform float u_time;
+    uniform sampler2D u_electricImage;
    
-    varying vec2 v_uv;
-    varying vec3 v_position;
+    varying vec2 vUv;
+    varying vec3 vPosition;
 
     void main() {
-      v_uv = uv;
-      v_position = position;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4( v_position, 1.0 );
+      vUv = uv;
+      vPosition = position;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
     }
 `
-const fshader_electric = `
+const fshader_circuit = `
     
     uniform sampler2D u_electricImage;
     uniform float u_time;
     uniform float u_timeDelta;
     
-    varying vec2 v_uv;
-    varying vec3 v_posiiton;
+    
+    varying vec3 vPosiiton;
+
+
+uniform sampler2D u_chromaticNoise;
+
+float contrast = 5.0;
+float distortion = 0.9;
+float speed = 0.01;
+vec3 color = vec3(1., 1., 1.);
+float brightness = 0.12;
+
+
+uniform vec2 u_resolution;
+varying vec2 vUv;
+
+mat2 makem2(float theta) {
+    float c = cos(theta);   
+    float s = sin(theta);
+    return mat2(c, -s, s, c);
+}
+
+float noise(vec2 x) {
+    return texture2D(u_chromaticNoise, x * .01).x;
+}
+
+float fbm(vec2 p) {
+    float z = 2.;
+    float rz = 0.;
+    vec2 bp = p;
+    for (float i = 1.; i < 6.0; i++) {
+        rz += abs((noise(p) - 0.5) * 2.0) / z;
+        z = z * 2.;
+        p = p * 2.;
+    }
+    return rz;
+}
+
+float dualfbm(vec2 p) {
+    vec2 p2 = p * distortion;
+    vec2 basis = vec2(fbm(p2 - u_time * speed * 1.6), fbm(p2 + u_time * speed * 1.7));
+    basis = (basis - .5) * .2;
+    p += basis;
+    return fbm(p * makem2(u_time *  speed * 0.2));
+}
     
 
     void main()
     {
       vec2 offset = vec2(u_time/4.0);
       float tileCount = 3.0;
-      vec2 phase = fract(v_uv * tileCount);
-      vec2 movingPhase = fract((v_uv.y * tileCount)-offset);
+      vec2 phase = fract(vUv * tileCount);
+      vec2 movingPhase = fract((vUv.y * tileCount)-offset);
 
       vec4 electricImage = texture2D(u_electricImage, phase);
 
       vec4 mask = texture2D(u_electricImage, movingPhase);
 
+      vec2 p = ( vUv.xy  ) * u_resolution;
+      float rz = dualfbm( p );
+      vec3 col = ( color / rz ) * brightness;
 
-      gl_FragColor = vec4(vec3(electricImage.g), (mask.r * electricImage.b));
+      col = ( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5;
+      col += vec3(0.0, 0.0, electricImage.b);
+      gl_FragColor = vec4( vec3(col), electricImage.r);
     }
+`
+const Material_Circuit = new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader: vshader_circuit,
+    fragmentShader: fshader_circuit,
+    lights: true,
+    transparent: true,
+});
+Material_Circuit.extensions.derivatives = true;
+
+// ELECTRIC
+const vshader_electric = `
+    
+  varying vec3 vPosition;
+  varying vec3 vNormal;
+  varying vec2 vUv;
+
+  void main() {
+
+      
+      vNormal = normal;
+      vUv = uv;
+      vPosition = position;
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( vPosition, 1.0 );
+
+  }
+`
+const fshader_electric = `
+    
+
+
+uniform float u_time;
+
+uniform sampler2D u_chromaticNoise;
+
+float contrast = 5.0;
+float distortion = 0.9;
+float speed = 0.01;
+vec3 color = vec3(1., 1., 1.);
+float brightness = 0.12;
+
+
+uniform vec2 u_resolution;
+varying vec2 vUv;
+
+mat2 makem2(float theta) {
+    float c = cos(theta);   
+    float s = sin(theta);
+    return mat2(c, -s, s, c);
+}
+
+float noise(vec2 x) {
+    return texture2D(u_chromaticNoise, x * .01).x;
+}
+
+float fbm(vec2 p) {
+    float z = 2.;
+    float rz = 0.;
+    vec2 bp = p;
+    for (float i = 1.; i < 6.0; i++) {
+        rz += abs((noise(p) - 0.5) * 2.0) / z;
+        z = z * 2.;
+        p = p * 2.;
+    }
+    return rz;
+}
+
+float dualfbm(vec2 p) {
+    vec2 p2 = p * distortion;
+    vec2 basis = vec2(fbm(p2 - u_time * speed * 1.6), fbm(p2 + u_time * speed * 1.7));
+    basis = (basis - .5) * .2;
+    p += basis;
+    return fbm(p * makem2(u_time *  speed * 0.2));
+}
+
+void main() {
+    vec2 p = ( vUv.xy  ) * u_resolution;
+    float rz = dualfbm( p );
+    
+    vec3 col = ( color / rz ) * brightness;
+    
+    col = ( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5;
+
+    gl_FragColor = vec4( col, 1.0 );
+}
+
 `
 const Material_Electric = new THREE.ShaderMaterial({
     uniforms,
@@ -180,13 +322,12 @@ const Material_Electric = new THREE.ShaderMaterial({
 Material_Electric.extensions.derivatives = true;
 
 
-
 //============ ENVIRONMENT HDR ==============
 const envTexture = new THREE.CubeTextureLoader().load(["img/HDRI/boxed/friarsLivingRoom/px.png", "img/HDRI/boxed/friarsLivingRoom/nx.png", "img/HDRI/boxed/friarsLivingRoom/py.png", "img/HDRI/boxed/friarsLivingRoom/ny.png", "img/HDRI/boxed/friarsLivingRoom/pz.png", "img/HDRI/boxed/friarsLivingRoom/nz.png"])
 envTexture.mapping = THREE.CubeReflectionMapping
 // envTexture.mapping = THREE.CubeRefractionMapping
 // materialPhysical.envMap = envTexture
 
-export {Material_Static, Material_Fracted, Material_Electric, uniforms}
+export {Material_Static, Material_Fracted, Material_Circuit, Material_Electric, uniforms}
 
 
