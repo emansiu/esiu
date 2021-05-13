@@ -478,6 +478,8 @@ const animate = () => {
 
     icoSphere.rotateY(0.001);
     icoSphere.rotateZ(0.001);
+    electricBallMesh.rotateY(0.001);
+    // electricBallMesh.rotateZ(0.001);
     // mainSpotLight.updateWorldMatrix
 
 

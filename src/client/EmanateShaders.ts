@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { DoubleSide } from 'three';
 
 // TEXTURE LOADER INITIALIZATION
 const textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
@@ -164,11 +165,11 @@ const fshader_circuit = `
 
 uniform sampler2D u_chromaticNoise;
 
-float contrast = 5.0;
-float distortion = 0.9;
+float contrast = 20.0;
+float distortion = 1.0;
 float speed = 0.01;
 vec3 color = vec3(1., 1., 1.);
-float brightness = 0.12;
+float brightness = 0.07;
 
 
 uniform vec2 u_resolution;
@@ -207,8 +208,12 @@ float dualfbm(vec2 p) {
 
     void main()
     {
-      vec2 offset = vec2(u_time/4.0);
-      float tileCount = 3.0;
+
+
+     
+      
+        vec2 offset = vec2(u_time/4.0);
+      float tileCount = 4.0;
       vec2 phase = fract(vUv * tileCount);
       vec2 movingPhase = fract((vUv.y * tileCount)-offset);
 
@@ -218,11 +223,18 @@ float dualfbm(vec2 p) {
 
       vec2 p = ( vUv.xy  ) * u_resolution;
       float rz = dualfbm( p );
-      vec3 col = ( color / rz ) * brightness;
+      vec4 col = vec4(vec3( (color / rz ) * brightness), electricImage.b);
 
-      col = ( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5;
-      col += vec3(0.0, 0.0, electricImage.b);
-      gl_FragColor = vec4( vec3(col), electricImage.r);
+      col += vec4(vec3(0.0, 0.4, 0.4), electricImage.b);
+      col += vec4(vec3(( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.0), ( ((col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5) * (1.0-electricImage.b)) * 0.1;
+      gl_FragColor = col;
+      // gl_FragColor = vec4(vec3(electricImage.b), electricImage.b);
+
+      
+    
+
+
+      
     }
 `
 const Material_Circuit = new THREE.ShaderMaterial({
@@ -231,6 +243,9 @@ const Material_Circuit = new THREE.ShaderMaterial({
     fragmentShader: fshader_circuit,
     lights: true,
     transparent: true,
+    depthTest: false,
+    side: DoubleSide,
+    
 });
 Material_Circuit.extensions.derivatives = true;
 
@@ -301,6 +316,8 @@ float dualfbm(vec2 p) {
 }
 
 void main() {
+  
+  
     vec2 p = ( vUv.xy  ) * u_resolution;
     float rz = dualfbm( p );
     
