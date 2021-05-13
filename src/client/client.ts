@@ -179,11 +179,24 @@ screenMultiplier =  width/height > 1 ? 1 : width/height
 const electricBallGeo: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,16,16)
 
 const electricBallMesh: THREE.Mesh = new THREE.Mesh(electricBallGeo, Material_Circuit)
-electricBallMesh.position.set(0, 0 , 1)
+electricBallMesh.position.set(-0.75, 0 , 1)
 electricBallMesh.castShadow = true;
 electricBallMesh.receiveShadow = true;
 scene.add(electricBallMesh)
 
+const electricBallMesh_02: THREE.Mesh = new THREE.Mesh(electricBallGeo, Material_Circuit)
+electricBallMesh_02.rotateZ(Math.PI/2);
+electricBallMesh_02.position.set(-0.75, 0 , 1);
+electricBallMesh_02.scale.set(0.75,0.75,0.75);
+electricBallMesh_02.castShadow = true;
+electricBallMesh_02.receiveShadow = true;
+scene.add(electricBallMesh_02)
+
+const electricBallMesh_03: THREE.Mesh = new THREE.Mesh(electricBallGeo, Material_Circuit)
+electricBallMesh_03.position.set(0.75, 0 , 1);
+electricBallMesh_03.castShadow = true;
+electricBallMesh_03.receiveShadow = true;
+scene.add(electricBallMesh_03)
 
 
 //---------- CREATE SOME TEXT-----------
@@ -249,35 +262,35 @@ loader.load('fonts/Azonix.ttf', (fnt) => {
 
 })
 
-loader.load('fonts/Azonix.ttf', (fnt) => {
+// loader.load('fonts/Azonix.ttf', (fnt) => {
 
-    const font = new THREE.Font(fnt)
+//     const font = new THREE.Font(fnt)
 
-    const textGeo = new THREE.TextGeometry( 'Contact', {
-        font,
-        size: 0.15 * screenMultiplier,
-        height: 0.05,
-        curveSegments: 16,
-        bevelEnabled: true,
-        bevelThickness: .01,
-        bevelSize: 0.006,
-        bevelOffset: 0,
-        bevelSegments: 4,
-    } );
+//     const textGeo = new THREE.TextGeometry( 'Contact', {
+//         font,
+//         size: 0.15 * screenMultiplier,
+//         height: 0.05,
+//         curveSegments: 16,
+//         bevelEnabled: true,
+//         bevelThickness: .01,
+//         bevelSize: 0.006,
+//         bevelOffset: 0,
+//         bevelSegments: 4,
+//     } );
     
-    const textMesh = new THREE.Mesh(textGeo, materialPhysical)
-    textMesh.castShadow = true;
-    textMesh.name = "Contact"
-    textMesh.position.set(1.2,0,1)
-    
-    
-    textMesh.geometry.center();
+//     const textMesh = new THREE.Mesh(textGeo, materialPhysical)
+//     textMesh.castShadow = true;
+//     textMesh.name = "Contact"
+//     textMesh.position.set(1.2,0,1)
     
     
-    scene.add(textMesh)
-    sceneMeshes.push(textMesh)
+//     textMesh.geometry.center();
+    
+    
+//     scene.add(textMesh)
+//     sceneMeshes.push(textMesh)
 
-})
+// })
 
 
 // POTENTIAL BACKGROUND PLANE MESH
@@ -289,7 +302,10 @@ loader.load('fonts/Azonix.ttf', (fnt) => {
 // backgroundPlane.position.z = -1;
 // scene.add(backgroundPlane)
 
+
+
 // ======== IMPORT OBJECTS =============
+
 const gltfLoader = new GLTFLoader()
 //---------- MY NAME
 // let EmanuelSiu:THREE.Mesh
@@ -456,6 +472,8 @@ const animate = () => {
     uniforms.u_timeDelta.value = clock.getDelta();
 
     electricBallMesh.rotateY(0.001);
+    electricBallMesh_02.rotateX(-0.00075);
+    electricBallMesh_03.rotateY(0.001);
 
 
     render()

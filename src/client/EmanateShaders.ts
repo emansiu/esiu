@@ -226,8 +226,17 @@ float dualfbm(vec2 p) {
       vec4 col = vec4(vec3( (color / rz ) * brightness), electricImage.b);
 
       col += vec4(vec3(0.0, 0.4, 0.4), electricImage.b);
-      col += vec4(vec3(( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.0), ( ((col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5) * (1.0-electricImage.b)) * 0.1;
-      gl_FragColor = col;
+      col += vec4(vec3(( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5), ( ( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5) * (1.0-electricImage.b)) *0.2;
+      // col += vec4(vec3(( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5), ( ( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5) * (1.0-electricImage.b)) ;
+      // col += vec4(vec3(( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5), ( ( (col - 0.5 ) * max( contrast, 0.0 ) ) + 0.5) * (1.0-electricImage.b)) ;
+
+      if (gl_FrontFacing){
+        gl_FragColor = col;
+      } else {
+        gl_FragColor = col * 0.3;
+      }
+
+      // gl_FragColor = col;
       // gl_FragColor = vec4(vec3(electricImage.b), electricImage.b);
 
       
@@ -243,9 +252,10 @@ const Material_Circuit = new THREE.ShaderMaterial({
     fragmentShader: fshader_circuit,
     lights: true,
     transparent: true,
-    depthTest: false,
+    // depthTest: false,
+    opacity:0.1,
+    depthWrite: false,
     side: DoubleSide,
-    
 });
 Material_Circuit.extensions.derivatives = true;
 
