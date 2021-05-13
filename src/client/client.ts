@@ -55,9 +55,10 @@ camera.position.z = 5
 
 // TEXTURES
 const textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
-const bgTexture = textureLoader.load( 'https://i.imgur.com/wkjbzYZ.png' );
+const bgTexture = textureLoader.load( 'https://t4.ftcdn.net/jpg/02/34/98/73/360_F_234987365_1bwmHyUjVOKIibWEbnwaayE9FQiq2xpu.jpg' );
 
-scene.background = bgTexture;
+scene.background = bgTexture
+// scene.background = new THREE.Color(0x333333);
 
 // RENDERER
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -131,8 +132,8 @@ shadowMaterial.opacity = 0.5;
 
 const materialPhysical: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({ reflectivity: 1.0, roughness: 0.1, metalness: 0.8, color: 0xffffff });
 
-const backgroundMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map:bgTexture, displacementMap:bgTexture, displacementScale:0});
-const breadcrumbMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({color:0x999999})
+// const backgroundMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, map:bgTexture, displacementMap:bgTexture, displacementScale:0});
+// const breadcrumbMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({color:0x999999})
 
 
 
@@ -172,36 +173,20 @@ if (landscape){
 // screenMultiplier =  (((Math.tan((camera.fov/2) * Math.PI / 180) * (camera.position.z - 1)) * (width/height)) )
 screenMultiplier =  width/height > 1 ? 1 : width/height
 
-// ICO BALL
-const icoGeo: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(0.5 * screenMultiplier, 1)
 
-const icoSphere: THREE.Mesh = new THREE.Mesh(icoGeo, Material_Electric)
-icoSphere.position.set(0, 0, 1)
-icoSphere.castShadow = true;
-icoSphere.receiveShadow = true;
-scene.add(icoSphere)
-
-// STATIC BALL
-const ball: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,12,12)
-
-const ballMesh: THREE.Mesh = new THREE.Mesh(ball, Material_Electric)
-ballMesh.position.set(1, 0 , 1)
-ballMesh.castShadow = true;
-ballMesh.receiveShadow = true;
-scene.add(ballMesh)
 
 // ELECTRIC BALL
 const electricBallGeo: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,16,16)
 
 const electricBallMesh: THREE.Mesh = new THREE.Mesh(electricBallGeo, Material_Circuit)
-electricBallMesh.position.set(-1, 0 , 1)
+electricBallMesh.position.set(0, 0 , 1)
 electricBallMesh.castShadow = true;
 electricBallMesh.receiveShadow = true;
 scene.add(electricBallMesh)
 
 
 
-//---------- CREATE SOME TEXT
+//---------- CREATE SOME TEXT-----------
 
 const loader = new TTFLoader();
 loader.load('fonts/Azonix.ttf', (fnt) => {
@@ -210,7 +195,7 @@ loader.load('fonts/Azonix.ttf', (fnt) => {
 
     const textGeo = new THREE.TextGeometry( 'Project History', {
         font,
-        size: 0.2 * screenMultiplier,
+        size: 0.15 * screenMultiplier,
         height: 0.05,
         curveSegments: 16,
         bevelEnabled: true,
@@ -226,7 +211,7 @@ loader.load('fonts/Azonix.ttf', (fnt) => {
     textMesh.position.set(0,0.8,1)
     
     
-    // textMesh.geometry.center();
+    textMesh.geometry.center();
     
     
     scene.add(textMesh)
@@ -234,41 +219,75 @@ loader.load('fonts/Azonix.ttf', (fnt) => {
 
 })
 
-const textGeo = new THREE.TextGeometry( 'About', {
-    font: new THREE.Font( HelvetikerFont ),
-    size: 0.2 * screenMultiplier,
-    height: 0.05,
-    curveSegments: 16,
-    bevelEnabled: true,
-    bevelThickness: .01,
-    bevelSize: 0.006,
-    bevelOffset: 0,
-    bevelSegments: 4,
-} );
+loader.load('fonts/Azonix.ttf', (fnt) => {
 
-const textMesh = new THREE.Mesh(textGeo, materialPhysical)
-textMesh.castShadow = true;
-textMesh.name = "AboutButton"
-textMesh.position.set(0,-0.8,1)
+    const font = new THREE.Font(fnt)
 
+    const textGeo = new THREE.TextGeometry( 'About', {
+        font,
+        size: 0.15 * screenMultiplier,
+        height: 0.05,
+        curveSegments: 16,
+        bevelEnabled: true,
+        bevelThickness: .01,
+        bevelSize: 0.006,
+        bevelOffset: 0,
+        bevelSegments: 4,
+    } );
+    
+    const textMesh = new THREE.Mesh(textGeo, materialPhysical)
+    textMesh.castShadow = true;
+    textMesh.name = "About"
+    textMesh.position.set(0,-0.8,1)
+    
+    
+    textMesh.geometry.center();
+    
+    
+    scene.add(textMesh)
+    sceneMeshes.push(textMesh)
 
-textMesh.geometry.center();
+})
 
+loader.load('fonts/Azonix.ttf', (fnt) => {
 
-scene.add(textMesh)
-sceneMeshes.push(textMesh)
+    const font = new THREE.Font(fnt)
 
+    const textGeo = new THREE.TextGeometry( 'Contact', {
+        font,
+        size: 0.15 * screenMultiplier,
+        height: 0.05,
+        curveSegments: 16,
+        bevelEnabled: true,
+        bevelThickness: .01,
+        bevelSize: 0.006,
+        bevelOffset: 0,
+        bevelSegments: 4,
+    } );
+    
+    const textMesh = new THREE.Mesh(textGeo, materialPhysical)
+    textMesh.castShadow = true;
+    textMesh.name = "Contact"
+    textMesh.position.set(1.2,0,1)
+    
+    
+    textMesh.geometry.center();
+    
+    
+    scene.add(textMesh)
+    sceneMeshes.push(textMesh)
 
+})
 
 
 // POTENTIAL BACKGROUND PLANE MESH
-const invisiblePlaneGeo: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(15, 10, 10, 10)
-const backgroundPlane: THREE.Mesh = new THREE.Mesh(invisiblePlaneGeo, backgroundMaterial)
-backgroundPlane.visible = true;
-backgroundPlane.receiveShadow = true
-backgroundPlane.castShadow = true
+// const invisiblePlaneGeo: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(15, 10, 10, 10)
+// const backgroundPlane: THREE.Mesh = new THREE.Mesh(invisiblePlaneGeo, backgroundMaterial)
+// backgroundPlane.visible = true;
+// backgroundPlane.receiveShadow = true
+// backgroundPlane.castShadow = true
 // backgroundPlane.position.z = -1;
-scene.add(backgroundPlane)
+// scene.add(backgroundPlane)
 
 // ======== IMPORT OBJECTS =============
 const gltfLoader = new GLTFLoader()
@@ -301,46 +320,7 @@ const gltfLoader = new GLTFLoader()
 //     }
 // );
 
-// ------------------ INPUT SHAPE
-let inputShape: THREE.Mesh
-gltfLoader.load(
-    'models/ShapeInput.glb',
-    function (gltf) {
 
-        gltf.scene.traverse(function (child) {
-            if ((<THREE.Mesh>child).isMesh) {
-                inputShape = <THREE.Mesh>child
-                inputShape.receiveShadow = true
-                inputShape.castShadow = true
-                inputShape.material = breadcrumbMaterial
-                inputShape.scale.set( screenMultiplier, screenMultiplier, screenMultiplier)
-
-                //object.geometry.center();
-                var box = new THREE.Box3().setFromObject( inputShape )
-                var boundingBoxSize = box.max.sub( box.min );
-                
-                // var height = boundingBoxSize.y;
-                // inputShape.position.y = - height / 2;
-                
-                inputShape.position.set(
-                    alignmentsForObject(icoSphere,camera).left + (boundingBoxSize.x /1.3) ,
-                    alignmentsForObject(icoSphere,camera).bottom + (boundingBoxSize.y /1.3),
-                    1
-                    )
-                    
-                
-                
-            }
-        })
-        scene.add(gltf.scene);
-    },
-    (xhr) => {
-        // console.log((xhr.loaded / xhr.total * 100) + '% loaded')
-    },
-    (error) => {
-        console.log(error);
-    }
-);
 
 
 
@@ -371,58 +351,58 @@ orbitControls.target.set(0,0,1)
 const raycaster = new THREE.Raycaster();
 
 
-const onRelease = (event: any) => {
+// const onRelease = (event: any) => {
     
-    orbitControls.enabled = true;
+//     orbitControls.enabled = true;
 
-    // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
-    let mouse: any
-    if (event.touches){
-        // Events in case of computer
-        mouse = {
-            x: (event.changedTouches[0].clientX / renderer.domElement.clientWidth) * 2 - 1,
-            y: -(event.changedTouches[0].clientY / renderer.domElement.clientHeight) * 2 + 1
-        }
+//     // mouse is normalized screen. x-left = -1, x-right = 1, y-top = 1, y-bottom = -1
+//     let mouse: any
+//     if (event.touches){
+//         // Events in case of computer
+//         mouse = {
+//             x: (event.changedTouches[0].clientX / renderer.domElement.clientWidth) * 2 - 1,
+//             y: -(event.changedTouches[0].clientY / renderer.domElement.clientHeight) * 2 + 1
+//         }
         
-    }else {
-        // Events in case of phone
-        mouse = {
-            x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
-            y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
-        }
-    }
+//     }else {
+//         // Events in case of phone
+//         mouse = {
+//             x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+//             y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+//         }
+//     }
     
-    raycaster.setFromCamera(mouse, camera);
+//     raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects(sceneMeshes, false);
+//     const intersects = raycaster.intersectObjects(sceneMeshes, false);
 
-    if(intersects.length > 0 ){
+//     if(intersects.length > 0 ){
         
-        if (intersects[0].object.name === "AboutButton") {
+//         if (intersects[0].object.name === "AboutButton") {
 
-            const menuAnimation = gsap.timeline()
+//             const menuAnimation = gsap.timeline()
             
-            menuAnimation.to(icoSphere.position,{
-                x: inputShape.position.x , 
-                y:inputShape.position.y,
-                z: inputShape.position.z + 0.1,
-                duration:1,
-                ease:"power3.in"
-            });
-            menuAnimation.to(icoSphere.scale,{
-                x: 0.30, 
-                y:0.30,
-                z:0.30,
-                duration:1.0,
-                ease:"power3.in"
-            },0);
+//             menuAnimation.to(icoSphere.position,{
+//                 x: inputShape.position.x , 
+//                 y:inputShape.position.y,
+//                 z: inputShape.position.z + 0.1,
+//                 duration:1,
+//                 ease:"power3.in"
+//             });
+//             menuAnimation.to(icoSphere.scale,{
+//                 x: 0.30, 
+//                 y:0.30,
+//                 z:0.30,
+//                 duration:1.0,
+//                 ease:"power3.in"
+//             },0);
 
-        }
-    }
-}
+//         }
+//     }
+// }
 
-renderer.domElement.addEventListener('click', onRelease, false);
-renderer.domElement.addEventListener('touchend', onRelease, false);
+// renderer.domElement.addEventListener('click', onRelease, false);
+// renderer.domElement.addEventListener('touchend', onRelease, false);
 
 
 
@@ -471,16 +451,11 @@ const animate = () => {
 
     requestAnimationFrame(animate)
 
-    // helper.update() //LIGHT HELPER
 
     uniforms.u_time.value += clock.getDelta();
     uniforms.u_timeDelta.value = clock.getDelta();
 
-    icoSphere.rotateY(0.001);
-    icoSphere.rotateZ(0.001);
     electricBallMesh.rotateY(0.001);
-    // electricBallMesh.rotateZ(0.001);
-    // mainSpotLight.updateWorldMatrix
 
 
     render()
