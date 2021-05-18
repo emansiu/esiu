@@ -175,7 +175,7 @@ screenMultiplier =  width/height > 1 ? 1 : width/height
 
 
 
-// ELECTRIC BALL
+//============ ELECTRIC BALL
 const electricBallGeo: THREE.SphereBufferGeometry = new THREE.SphereBufferGeometry(0.5,16,16)
 
 const electricBallMesh: THREE.Mesh = new THREE.Mesh(electricBallGeo, Material_Circuit)
@@ -197,6 +197,14 @@ electricBallMesh_03.position.set(0.75, 0 , 1);
 electricBallMesh_03.castShadow = true;
 electricBallMesh_03.receiveShadow = true;
 scene.add(electricBallMesh_03)
+
+const flatMaterial = new THREE.MeshPhysicalMaterial({color:'blue', opacity:0.9, transparent:true})
+const electricBallMesh_04: THREE.Mesh = new THREE.Mesh(electricBallGeo, flatMaterial)
+electricBallMesh_04.position.set(0.75, 0 , 1);
+electricBallMesh_04.scale.set(0.8,0.8,0.8);
+electricBallMesh_04.castShadow = true;
+electricBallMesh_04.receiveShadow = true;
+scene.add(electricBallMesh_04)
 
 
 //---------- CREATE SOME TEXT-----------

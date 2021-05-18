@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { DoubleSide } from 'three';
+import { BlendingSrcFactor, DoubleSide } from 'three';
 
 // TEXTURE LOADER INITIALIZATION
 const textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
@@ -240,10 +240,6 @@ float dualfbm(vec2 p) {
       // gl_FragColor = vec4(vec3(electricImage.b), electricImage.b);
 
       
-    
-
-
-      
     }
 `
 const Material_Circuit = new THREE.ShaderMaterial({
@@ -253,7 +249,6 @@ const Material_Circuit = new THREE.ShaderMaterial({
     lights: true,
     transparent: true,
     // depthTest: false,
-    opacity:0.1,
     depthWrite: false,
     side: DoubleSide,
 });
